@@ -1,6 +1,5 @@
 import { Mesh } from '../renderer';
 
-const WHITE = [1.0, 1.0, 1.0];
 const RED = [1.0, 0.0, 0.0];
 const BLACK = [0.0, 0.0, 0.0];
 const GREEN = [0.0, 1.0, 0.0];
@@ -315,7 +314,8 @@ export const createXYCircle = (radius: number, wired = false): Mesh => {
     const outer = radius * (1.0 + RWIDTH * 0.5);
     const inner = radius * (1.0 - RWIDTH * 0.5);
 
-    for (let i = 0; i < SDVNS; i++) {
+    let i = 0;
+    for (; i < SDVNS; i++) {
       const x0 = Math.cos(i * dPhi);
       const y0 = Math.sin(i * dPhi);
       const x1 = Math.cos(((i + 1) % SDVNS) * dPhi);
@@ -325,6 +325,26 @@ export const createXYCircle = (radius: number, wired = false): Mesh => {
       vertices.push(outer * x1, outer * y1, 0.0, ...BLACK);
       vertices.push(inner * x1, inner * y1, 0.0, ...BLACK);
       vertices.push(inner * x0, inner * y0, 0.0, ...BLACK);
+
+      indices.push(i * 4);
+      indices.push(i * 4 + 1);
+      indices.push(i * 4 + 3);
+
+      indices.push(i * 4 + 1);
+      indices.push(i * 4 + 2);
+      indices.push(i * 4 + 3);
+    }
+
+    for (let j = 0; j < SDVNS; j++, i++) {
+      const x0 = Math.cos(j * dPhi);
+      const y0 = Math.sin(j * dPhi);
+      const x1 = Math.cos(((j + 1) % SDVNS) * dPhi);
+      const y1 = Math.sin(((j + 1) % SDVNS) * dPhi);
+
+      vertices.push(radius * x0, radius * y0, RWIDTH * 0.25, ...BLACK);
+      vertices.push(radius * x1, radius * y1, RWIDTH * 0.25, ...BLACK);
+      vertices.push(radius * x1, radius * y1, -RWIDTH * 0.25, ...BLACK);
+      vertices.push(radius * x0, radius * y0, -RWIDTH * 0.25, ...BLACK);
 
       indices.push(i * 4);
       indices.push(i * 4 + 1);
@@ -397,7 +417,8 @@ export const createXZCircle = (radius: number, wired = false): Mesh => {
     const outer = radius * (1.0 + RWIDTH * 0.5);
     const inner = radius * (1.0 - RWIDTH * 0.5);
 
-    for (let i = 0; i < SDVNS; i++) {
+    let i = 0;
+    for (; i < SDVNS; i++) {
       const x0 = Math.cos(i * dPhi);
       const y0 = Math.sin(i * dPhi);
       const x1 = Math.cos(((i + 1) % SDVNS) * dPhi);
@@ -407,6 +428,26 @@ export const createXZCircle = (radius: number, wired = false): Mesh => {
       vertices.push(outer * x1, 0.0, outer * y1, ...BLACK);
       vertices.push(inner * x1, 0.0, inner * y1, ...BLACK);
       vertices.push(inner * x0, 0.0, inner * y0, ...BLACK);
+
+      indices.push(i * 4);
+      indices.push(i * 4 + 1);
+      indices.push(i * 4 + 3);
+
+      indices.push(i * 4 + 1);
+      indices.push(i * 4 + 2);
+      indices.push(i * 4 + 3);
+    }
+
+    for (let j = 0; j < SDVNS; j++, i++) {
+      const x0 = Math.cos(j * dPhi);
+      const y0 = Math.sin(j * dPhi);
+      const x1 = Math.cos(((j + 1) % SDVNS) * dPhi);
+      const y1 = Math.sin(((j + 1) % SDVNS) * dPhi);
+
+      vertices.push(radius * x0, RWIDTH * 0.25, radius * y0, ...BLACK);
+      vertices.push(radius * x1, RWIDTH * 0.25, radius * y1, ...BLACK);
+      vertices.push(radius * x1, -RWIDTH * 0.25, radius * y1, ...BLACK);
+      vertices.push(radius * x0, -RWIDTH * 0.25, radius * y0, ...BLACK);
 
       indices.push(i * 4);
       indices.push(i * 4 + 1);
@@ -479,7 +520,8 @@ export const createYZCircle = (radius: number, wired = false): Mesh => {
     const outer = radius * (1.0 + RWIDTH * 0.5);
     const inner = radius * (1.0 - RWIDTH * 0.5);
 
-    for (let i = 0; i < SDVNS; i++) {
+    let i = 0;
+    for (; i < SDVNS; i++) {
       const x0 = Math.cos(i * dPhi);
       const y0 = Math.sin(i * dPhi);
       const x1 = Math.cos(((i + 1) % SDVNS) * dPhi);
@@ -489,6 +531,26 @@ export const createYZCircle = (radius: number, wired = false): Mesh => {
       vertices.push(0.0, outer * x1, outer * y1, ...BLACK);
       vertices.push(0.0, inner * x1, inner * y1, ...BLACK);
       vertices.push(0.0, inner * x0, inner * y0, ...BLACK);
+
+      indices.push(i * 4);
+      indices.push(i * 4 + 1);
+      indices.push(i * 4 + 3);
+
+      indices.push(i * 4 + 1);
+      indices.push(i * 4 + 2);
+      indices.push(i * 4 + 3);
+    }
+
+    for (let j = 0; j < SDVNS; j++, i++) {
+      const x0 = Math.cos(j * dPhi);
+      const y0 = Math.sin(j * dPhi);
+      const x1 = Math.cos(((j + 1) % SDVNS) * dPhi);
+      const y1 = Math.sin(((j + 1) % SDVNS) * dPhi);
+
+      vertices.push(RWIDTH * 0.25, radius * x0, radius * y0, ...BLACK);
+      vertices.push(RWIDTH * 0.25, radius * x1, radius * y1, ...BLACK);
+      vertices.push(-RWIDTH * 0.25, radius * x1, radius * y1, ...BLACK);
+      vertices.push(-RWIDTH * 0.25, radius * x0, radius * y0, ...BLACK);
 
       indices.push(i * 4);
       indices.push(i * 4 + 1);
