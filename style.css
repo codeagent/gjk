@@ -1,0 +1,8 @@
+h1,
+h2 {
+  font-family: Lato;
+}
+#canvas {
+  display: block;
+  margin: 50px auto;
+}
