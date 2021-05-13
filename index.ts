@@ -24,6 +24,7 @@ import monkey from './objects/monkey.obj';
 import tetra from './objects/tetra.obj';
 
 import { AxesController } from './graphics/gizmos/axes-controller';
+import { closestPointToTetrahedron } from './gjk';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 
@@ -56,7 +57,7 @@ const drawables = [
       state: { cullFace: false }
     },
     geometry: objGeometry,
-    transform: new Transform(vec3.create(), vec3.fromValues(0.1, 0.1, 0.1))
+    transform: new Transform(vec3.create(), vec3.fromValues(1.0, 1.0, 1.0))
   },
   {
     material: {
@@ -86,7 +87,6 @@ const pointAxes = new AxesController(
   camera,
   new Transform([2, 1, 3])
 );
-
 
 console.log(meshes);
 fromEvent(document, 'keydown')
@@ -119,6 +119,21 @@ const draw = () => {
   const pixes = renderer.readAsIdMap();
   tetraAxes.update(pixes);
   pointAxes.update(pixes);
+
+  const points: vec3[] = [
+    vec3.fromValues(-0.38184, 0.17004, 0.39807),
+    vec3.fromValues(-0.38184, 0.14915, -1.36724),
+    vec3.fromValues(0.35428, -0.02641, -0.0),
+    vec3.fromValues(-0.16882, 1.03806, 0.12956)
+  ].map(e => vec3.transformMat4(e, e, tetraAxes.targetTransform.transform));
+
+  drawables[2].transform.position = closestPointToTetrahedron(
+    points[0],
+    points[1],
+    points[2],
+    points[3],
+    pointAxes.targetTransform.position
+  );
 
   requestAnimationFrame(draw);
 };

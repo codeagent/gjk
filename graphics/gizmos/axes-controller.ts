@@ -61,7 +61,7 @@ class BaseController {
   constructor(
     protected renderer: Renderer,
     protected camera: Camera,
-    protected targetTransform: Transform,
+    public targetTransform: Transform,
     protected viewDrawable: Drawable,
     protected idDrawable: Drawable,
     protected axis: vec3
@@ -324,7 +324,7 @@ export class AxesController {
   constructor(
     private renderer: Renderer,
     private camera: Camera,
-    private targetTransform: Transform
+    public readonly targetTransform: Transform
   ) {
     this.phongShader = renderer.createShader(phongVertex, phongFragment);
     this.flatShader = renderer.createShader(flatVertex, flatFragment);
