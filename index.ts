@@ -20,11 +20,11 @@ import {
 
 import { vertex as flatVertex, fragment as flatFragment } from './shaders/flat';
 
-import monkey from './objects/monkey.obj';
 import tetra from './objects/tetra.obj';
 
 import { AxesController } from './graphics/gizmos/axes-controller';
 import { closestPointToTetrahedron } from './gjk';
+import { createTetra } from './mesh';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 
@@ -36,7 +36,17 @@ const renderer = new Renderer(
 const phongShader = renderer.createShader(phongVertex, phongFragment);
 const flatShader = renderer.createShader(flatVertex, flatFragment);
 const meshes = loadObj(tetra);
-const objGeometry = renderer.createGeometry(meshes['Tetra']);
+
+const points = [
+  vec3.fromValues(-0.16882, 1.03806, 0.12956),
+  vec3.fromValues(0.35428, -0.02641, -0.0),
+  vec3.fromValues(-0.38184, 0.14915, -1.36724),
+  vec3.fromValues(-0.38184, 0.17004, 0.39807)
+];
+const objGeometry = renderer.createGeometry(
+  createTetra(points[0], points[1], points[2], points[3]),
+  WebGL2RenderingContext.LINES
+);
 const icoGeometry = renderer.createGeometry(meshes['Ico']);
 const gridGeometry = renderer.createGeometry(
   createGrid(),
@@ -50,7 +60,7 @@ const idFrameBuffer = renderer.createIdRenderTarget();
 const drawables = [
   {
     material: {
-      shader: phongShader,
+      shader: flatShader,
       uniforms: {
         albedo: vec4.fromValues(0.8, 0.8, 0.8, 1.0)
       },
@@ -120,18 +130,15 @@ const draw = () => {
   tetraAxes.update(pixes);
   pointAxes.update(pixes);
 
-  const points: vec3[] = [
-    vec3.fromValues(-0.38184, 0.17004, 0.39807),
-    vec3.fromValues(-0.38184, 0.14915, -1.36724),
-    vec3.fromValues(0.35428, -0.02641, -0.0),
-    vec3.fromValues(-0.16882, 1.03806, 0.12956)
-  ].map(e => vec3.transformMat4(e, e, tetraAxes.targetTransform.transform));
+  const transformed = points.map(e =>
+    vec3.transformMat4(vec3.create(), e, tetraAxes.targetTransform.transform)
+  );
 
   drawables[2].transform.position = closestPointToTetrahedron(
-    points[0],
-    points[1],
-    points[2],
-    points[3],
+    transformed[0],
+    transformed[1],
+    transformed[2],
+    transformed[3],
     pointAxes.targetTransform.position
   );
 
