@@ -2,6 +2,7 @@ import './style.css';
 
 import { fromEvent } from 'rxjs';
 import { map, filter } from 'rxjs/operators';
+import { vec3, vec4 } from 'gl-matrix';
 
 import {
   ArcRotationCameraController,
@@ -20,7 +21,8 @@ import {
 import { vertex as flatVertex, fragment as flatFragment } from './shaders/flat';
 
 import monkey from './objects/monkey.obj';
-import { vec3, vec4 } from 'gl-matrix';
+import tetra from './objects/tetra.obj';
+
 import { AxesController } from './graphics/gizmos/axes-controller';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -32,9 +34,9 @@ const renderer = new Renderer(
 );
 const phongShader = renderer.createShader(phongVertex, phongFragment);
 const flatShader = renderer.createShader(flatVertex, flatFragment);
-const meshes = loadObj(monkey);
-console.log(meshes);
-const objGeometry = renderer.createGeometry(meshes['Suzanne']);
+const meshes = loadObj(tetra);
+const objGeometry = renderer.createGeometry(meshes['Tetra']);
+const icoGeometry = renderer.createGeometry(meshes['Ico']);
 const gridGeometry = renderer.createGeometry(
   createGrid(),
   WebGL2RenderingContext.LINES
@@ -64,14 +66,29 @@ const drawables = [
     },
     geometry: gridGeometry,
     transform: new Transform()
+  },
+  {
+    material: {
+      shader: phongShader,
+      uniforms: {
+        albedo: vec4.fromValues(1.0, 0.2, 0.0, 1.0)
+      },
+      state: { cullFace: false }
+    },
+    geometry: icoGeometry,
+    transform: new Transform(vec3.create(), vec3.fromValues(0.01, 0.01, 0.01))
   }
 ];
-const axesController = new AxesController(
+
+const tetraAxes = new AxesController(renderer, camera, drawables[0].transform);
+const pointAxes = new AxesController(
   renderer,
   camera,
-  drawables[0].transform
+  new Transform([2, 1, 3])
 );
 
+
+console.log(meshes);
 fromEvent(document, 'keydown')
   .pipe(
     filter((e: KeyboardEvent) => ['q', 'w', 'e'].includes(e.key)),
@@ -79,10 +96,9 @@ fromEvent(document, 'keydown')
       (e: KeyboardEvent) => ({ q: 'none', w: 'movement', e: 'rotation' }[e.key])
     )
   )
-  .subscribe(mode => (axesController.mode = mode));
+  .subscribe(mode => (tetraAxes.mode = pointAxes.mode = mode));
+
 // Loop
-let t = Date.now();
-let dt = 0.0;
 const draw = () => {
   cameraController.update();
   renderer.setRenderTarget(null);
@@ -92,16 +108,18 @@ const draw = () => {
     renderer.drawGeometry(camera, drawable);
   }
   renderer.clear(WebGL2RenderingContext.DEPTH_BUFFER_BIT);
-  axesController.draw('viewport');
+  tetraAxes.draw('viewport');
+  pointAxes.draw('viewport');
 
   renderer.setRenderTarget(idFrameBuffer);
   renderer.clear();
-  axesController.draw('id');
+  tetraAxes.draw('id');
+  pointAxes.draw('id');
+
   const pixes = renderer.readAsIdMap();
-  axesController.update(pixes);
+  tetraAxes.update(pixes);
+  pointAxes.update(pixes);
 
   requestAnimationFrame(draw);
-  dt = (Date.now() - t) * 1.0e-3;
-  t = Date.now();
 };
 draw();
