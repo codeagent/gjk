@@ -21,6 +21,8 @@ export class Camera extends Transform {
     public readonly far: number
   ) {
     super();
+
+    
     mat4.perspective(
       this._projection,
       glMatrix.toRadian(this.fov),
@@ -28,5 +30,7 @@ export class Camera extends Transform {
       this.near,
       this.far
     );
+
+    // mat4.ortho(this._projection, -1.5, 1.5, -1, 1, 0.01, 10);
   }
 }

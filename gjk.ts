@@ -133,17 +133,19 @@ export const closestPointToTetrahedron = (
   }
 
   // find closest point on abc
-  if (vec3.dot(nAbc, ad) >= 0) {
-    // vec3.negate(nAbc, nAbc);
+  if (vec3.dot(nAbc, ad) > 0) {
+    vec3.negate(nAbc, nAbc);
   }
-  if (vec3.dot(nAbc, ap) >= 0.0) {
+  if (vec3.dot(nAbc, ap) > 0.0) {
+    console.log('nAbc');
+    let u = Math.abs(mixed(nAbc, bp, cp));
+    let v = Math.abs(mixed(nAbc, cp, ap));
+    let w = Math.abs(mixed(nAbc, ap, bp));
+    let s = u + v + w;
+    u /= s;
+    v /= s;
+    w /= s;
 
-    console.log('nABC');
-    const s = vec3.dot(nAbc, nAbc);
-    const u = Math.abs(mixed(nAbc, bp, cp)) / s;
-    const v = Math.abs(mixed(nAbc, cp, ap)) / s;
-    console.log(s, mixed(nAbc, bp, cp), mixed(nAbc, cp, ap));
-    const w = 1.0 - u - v;
     const q = vec3.clone(a);
     vec3.scale(q, q, u);
     vec3.scaleAndAdd(q, q, b, v);
@@ -154,12 +156,16 @@ export const closestPointToTetrahedron = (
   if (vec3.dot(nAcd, ab) >= 0) {
     vec3.negate(nAcd, nAcd);
   }
-  if (vec3.dot(nAcd, ap) >= 0.0) {
-    const s = vec3.dot(nAcd, nAcd);
-    const u = Math.abs(mixed(nAcd, cp, dp)) / s;
-    const v = Math.abs(mixed(nAcd, dp, ap)) / s;
-    console.log(s, u, v);
-    const w = 1.0 - u - v;
+
+  if (vec3.dot(nAcd, ap) > 0.0) {
+    let u = Math.abs(mixed(nAcd, cp, dp));
+    let v = Math.abs(mixed(nAcd, dp, ap));
+    let w = Math.abs(mixed(nAcd, ap, cp));
+    let s = u + v + w;
+    u /= s;
+    v /= s;
+    w /= s;
+
     const q = vec3.clone(a);
     vec3.scale(q, q, u);
     vec3.scaleAndAdd(q, q, c, v);
@@ -167,14 +173,18 @@ export const closestPointToTetrahedron = (
   }
 
   // find closest point on adb
-  if (vec3.dot(nAbd, ac) >= 0) {
+  if (vec3.dot(nAbd, ac) > 0) {
     vec3.negate(nAbd, nAbd);
   }
   if (vec3.dot(nAbd, ap) >= 0.0) {
-    const s = vec3.dot(nAbd, nAbd);
-    const u = Math.abs(mixed(nAbd, dp, bp)) / s;
-    const v = Math.abs(mixed(nAbd, bp, ap)) / s;
-    const w = 1.0 - u - v;
+    let u = Math.abs(mixed(nAbd, dp, bp));
+    let v = Math.abs(mixed(nAbd, bp, ap));
+    let w = Math.abs(mixed(nAbd, ap, dp));
+    let s = u + v + w;
+    u /= s;
+    v /= s;
+    w /= s;
+
     const q = vec3.clone(a);
     vec3.scale(q, q, u);
     vec3.scaleAndAdd(q, q, d, v);
@@ -185,11 +195,16 @@ export const closestPointToTetrahedron = (
   if (vec3.dot(nBcd, ab) < 0) {
     vec3.negate(nBcd, nBcd);
   }
-  if (vec3.dot(nBcd, cp) >= 0.0) {
-    const s = vec3.dot(nBcd, nBcd);
-    const u = Math.abs(mixed(nBcd, bp, dp)) / s;
-    const v = Math.abs(mixed(nBcd, dp, cp)) / s;
-    const w = 1.0 - u - v;
+  if (vec3.dot(nBcd, cp) > 0.0) {
+    console.log('nBcd');
+    let u = Math.abs(mixed(nBcd, bp, dp));
+    let v = Math.abs(mixed(nBcd, dp, cp));
+    let w = Math.abs(mixed(nBcd, cp, bp));
+    let s = u + v + w;
+    u /= s;
+    v /= s;
+    w /= s;
+
     const q = vec3.clone(c);
     vec3.scale(q, q, u);
     vec3.scaleAndAdd(q, q, b, v);
