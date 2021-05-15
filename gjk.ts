@@ -116,7 +116,7 @@ export const closestPointToTetrahedron = (
 
   // find closest point on abc
   if (
-    vec3.dot(nAbc, ap) >= 0 &&
+    vec3.dot(nAbc, ap) * vec3.dot(nAbc, ad) < 0 &&
     apOabXnAbc < 0 &&
     apOnAbcXac < 0 &&
     bpObcXnAbc < 0
@@ -137,7 +137,7 @@ export const closestPointToTetrahedron = (
 
   // find closest point on acd
   if (
-    vec3.dot(nAcd, ap) >= 0.0 &&
+    vec3.dot(nAcd, ap) * vec3.dot(nAcd, ab) < 0.0 &&
     apOacXnAcd < 0 &&
     apOnAcdXad < 0 &&
     cpOcdXnAcd < 0
@@ -158,7 +158,7 @@ export const closestPointToTetrahedron = (
 
   // find closest point on adb
   if (
-    vec3.dot(nAbd, ap) >= 0.0 &&
+    vec3.dot(nAbd, ap) * vec3.dot(nAbd, ac) < 0.0 &&
     apOnAbdXab < 0 &&
     apOadXnAbd < 0 &&
     bpOnAbdXbd < 0
@@ -179,7 +179,7 @@ export const closestPointToTetrahedron = (
 
   // find closest point on cbd
   if (
-    vec3.dot(nBcd, cp) >= 0.0 &&
+    vec3.dot(nBcd, cp) * vec3.dot(nBcd, ab) > 0.0 &&
     bpOnBcdXbc < 0 &&
     cpOnBcdXcd < 0 &&
     bpObdXnBcd < 0

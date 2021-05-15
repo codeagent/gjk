@@ -38,8 +38,8 @@ const flatShader = renderer.createShader(flatVertex, flatFragment);
 const meshes = loadObj(tetra);
 
 const points = [
-  vec3.fromValues(0.0, 1.0, 0.0),
   vec3.fromValues(2.0, 0.0, 0.0),
+  vec3.fromValues(0.0, 1.0, 0.0),
   vec3.fromValues(-2.0, 0.0, -2),
   vec3.fromValues(-2.0, 0.0, 2)
 ];
