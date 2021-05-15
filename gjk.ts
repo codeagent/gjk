@@ -3,10 +3,10 @@ import { vec3 } from 'gl-matrix';
 /**
  * out = (a, [b, c])
  */
+const tmp = vec3.create();
 export const mixed = (a: vec3, b: vec3, c: vec3) => {
-  const x = vec3.create();
-  vec3.cross(x, b, c);
-  return vec3.dot(a, x);
+  vec3.cross(tmp, b, c);
+  return vec3.dot(a, tmp);
 };
 
 export const closestPointToTetrahedron = (
