@@ -38,10 +38,10 @@ const flatShader = renderer.createShader(flatVertex, flatFragment);
 const meshes = loadObj(tetra);
 
 const points = [
-  vec3.fromValues(-0.38184, 0.417004, 0.39807),
-  vec3.fromValues(-1.58184, 0.14915, -1.36724),
-  vec3.fromValues(0.35428, -0.02641, -0.0),
-  vec3.fromValues(-0.16882, 0.53806, 0.12956)
+  vec3.fromValues(0.0, 1.0, 0.0),
+  vec3.fromValues(2.0, 0.0, 0.0),
+  vec3.fromValues(-2.0, 0.0, -2),
+  vec3.fromValues(-2.0, 0.0, 2)
 ];
 const objGeometry = renderer.createGeometry(
   createTetra(points[0], points[1], points[2], points[3]),

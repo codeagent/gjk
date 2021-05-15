@@ -65,79 +65,62 @@ export const closestPointToTetrahedron = (
   // check voronoi region of ab edge
   const nAbc = vec3.cross(vec3.create(), ab, ac);
   const nAbd = vec3.cross(vec3.create(), ad, ab);
-  if (
-    apOab >= 0 &&
-    bpOba >= 0 &&
-    mixed(ap, ab, nAbc) >= 0 &&
-    mixed(ap, nAbd, ab) >= 0
-  ) {
+  const apOabXnAbc = mixed(ap, ab, nAbc);
+  const apOnAbdXab = mixed(ap, nAbd, ab);
+  if (apOab >= 0 && bpOba >= 0 && apOabXnAbc >= 0 && apOnAbdXab >= 0) {
     const t = apOab / vec3.dot(ab, ab);
     return vec3.scaleAndAdd(vec3.create(), a, ab, t);
   }
 
   // check voronoi region of ac edge
   const nAcd = vec3.cross(vec3.create(), ac, ad);
-  if (
-    apOac >= 0 &&
-    cpOca >= 0 &&
-    mixed(ap, nAbc, ac) >= 0 &&
-    mixed(ap, ac, nAcd) >= 0
-  ) {
+  const apOnAbcXac = mixed(ap, nAbc, ac);
+  const apOacXnAcd = mixed(ap, ac, nAcd);
+  if (apOac >= 0 && cpOca >= 0 && apOnAbcXac >= 0 && apOacXnAcd >= 0) {
     const t = apOac / vec3.dot(ac, ac);
     return vec3.scaleAndAdd(vec3.create(), a, ac, t);
   }
 
   // check voronoi region of ad edge
-  if (
-    apOad >= 0 &&
-    dpOda >= 0 &&
-    mixed(ap, nAcd, ad) >= 0 &&
-    mixed(ap, ad, nAbd) >= 0
-  ) {
+  const apOnAcdXad = mixed(ap, nAcd, ad);
+  const apOadXnAbd = mixed(ap, ad, nAbd);
+  if (apOad >= 0 && dpOda >= 0 && apOnAcdXad >= 0 && apOadXnAbd >= 0) {
     const t = apOad / vec3.dot(ad, ad);
     return vec3.scaleAndAdd(vec3.create(), a, ad, t);
   }
 
   // check voronoi region of bc edge
   const nBcd = vec3.cross(vec3.create(), bd, bc);
-  if (
-    bpObc >= 0 &&
-    cpOcb >= 0 &&
-    mixed(bp, bc, nAbc) >= 0 &&
-    mixed(bp, nBcd, bc) >= 0
-  ) {
+  const bpObcXnAbc = mixed(bp, bc, nAbc);
+  const bpOnBcdXbc = mixed(bp, nBcd, bc);
+  if (bpObc >= 0 && cpOcb >= 0 && bpObcXnAbc >= 0 && bpOnBcdXbc >= 0) {
     const t = bpObc / vec3.dot(bc, bc);
     return vec3.scaleAndAdd(vec3.create(), b, bc, t);
   }
 
   // check voronoi region of cd edge
-  if (
-    cpOcd >= 0 &&
-    dpOdc >= 0 &&
-    mixed(cp, cd, nAcd) >= 0 &&
-    mixed(cp, nBcd, cd) >= 0
-  ) {
+  const cpOcdXnAcd = mixed(cp, cd, nAcd);
+  const cpOnBcdXcd = mixed(cp, nBcd, cd);
+  if (cpOcd >= 0 && dpOdc >= 0 && cpOcdXnAcd >= 0 && cpOnBcdXcd >= 0) {
     const t = cpOcd / vec3.dot(cd, cd);
     return vec3.scaleAndAdd(vec3.create(), c, cd, t);
   }
 
   // check voronoi region of bd edge
-  if (
-    bpObd >= 0 &&
-    dpOdb >= 0 &&
-    mixed(bp, nAbd, bd) >= 0 &&
-    mixed(bp, bd, nBcd) >= 0
-  ) {
+  const bpOnAbdXbd = mixed(bp, nAbd, bd);
+  const bpObdXnBcd = mixed(bp, bd, nBcd);
+  if (bpObd >= 0 && dpOdb >= 0 && bpOnAbdXbd >= 0 && bpObdXnBcd >= 0) {
     const t = bpObd / vec3.dot(bd, bd);
     return vec3.scaleAndAdd(vec3.create(), b, bd, t);
   }
 
   // find closest point on abc
-  if (vec3.dot(nAbc, ad) > 0) {
-    vec3.negate(nAbc, nAbc);
-  }
-  if (vec3.dot(nAbc, ap) > 0.0) {
-    console.log('nAbc');
+  if (
+    vec3.dot(nAbc, ap) >= 0 &&
+    apOabXnAbc < 0 &&
+    apOnAbcXac < 0 &&
+    bpObcXnAbc < 0
+  ) {
     let u = Math.abs(mixed(nAbc, bp, cp));
     let v = Math.abs(mixed(nAbc, cp, ap));
     let w = Math.abs(mixed(nAbc, ap, bp));
@@ -153,11 +136,12 @@ export const closestPointToTetrahedron = (
   }
 
   // find closest point on acd
-  if (vec3.dot(nAcd, ab) >= 0) {
-    vec3.negate(nAcd, nAcd);
-  }
-
-  if (vec3.dot(nAcd, ap) > 0.0) {
+  if (
+    vec3.dot(nAcd, ap) >= 0.0 &&
+    apOacXnAcd < 0 &&
+    apOnAcdXad < 0 &&
+    cpOcdXnAcd < 0
+  ) {
     let u = Math.abs(mixed(nAcd, cp, dp));
     let v = Math.abs(mixed(nAcd, dp, ap));
     let w = Math.abs(mixed(nAcd, ap, cp));
@@ -173,10 +157,12 @@ export const closestPointToTetrahedron = (
   }
 
   // find closest point on adb
-  if (vec3.dot(nAbd, ac) > 0) {
-    vec3.negate(nAbd, nAbd);
-  }
-  if (vec3.dot(nAbd, ap) >= 0.0) {
+  if (
+    vec3.dot(nAbd, ap) >= 0.0 &&
+    apOnAbdXab < 0 &&
+    apOadXnAbd < 0 &&
+    bpOnAbdXbd < 0
+  ) {
     let u = Math.abs(mixed(nAbd, dp, bp));
     let v = Math.abs(mixed(nAbd, bp, ap));
     let w = Math.abs(mixed(nAbd, ap, dp));
@@ -192,11 +178,12 @@ export const closestPointToTetrahedron = (
   }
 
   // find closest point on cbd
-  if (vec3.dot(nBcd, ab) < 0) {
-    vec3.negate(nBcd, nBcd);
-  }
-  if (vec3.dot(nBcd, cp) > 0.0) {
-    console.log('nBcd');
+  if (
+    vec3.dot(nBcd, cp) >= 0.0 &&
+    bpOnBcdXbc < 0 &&
+    cpOnBcdXcd < 0 &&
+    bpObdXnBcd < 0
+  ) {
     let u = Math.abs(mixed(nBcd, bp, dp));
     let v = Math.abs(mixed(nBcd, dp, cp));
     let w = Math.abs(mixed(nBcd, cp, bp));
