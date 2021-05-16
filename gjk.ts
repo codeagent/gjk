@@ -1,4 +1,4 @@
-import { vec3 } from 'gl-matrix';
+import { mat4, vec3 } from 'gl-matrix';
 
 export namespace gjk {
   /**
@@ -9,6 +9,10 @@ export namespace gjk {
     vec3.cross(tmp, b, c);
     return vec3.dot(a, tmp);
   };
+
+  export interface ISupportMappable {
+    support(transform: mat4, dir: vec3): vec3;
+  }
 
   export const closestPointToTetrahedron = (
     a: vec3,
@@ -287,7 +291,7 @@ export namespace gjk {
 
     // Project c onto ab, computing parameterized position d(t)=a+ t*(b – a)
     let t = vec3.dot(ap, ab) / vec3.dot(ab, ab);
-    
+
     // If outside segment, clamp t (and therefore d) to the closest endpoint
     if (t < 0.0) {
       t = 0.0;
@@ -297,5 +301,14 @@ export namespace gjk {
     }
     // Compute projected position from the clamped t
     return vec3.scaleAndAdd(vec3.create(), a, ab, t);
+  };
+
+  export const closestPoints = (
+    mappable0: ISupportMappable,
+    transform0: mat4,
+    mappable1: ISupportMappable,
+    transform1: mat4
+  ): [vec3, vec3] | null => {
+    return null;
   };
 }

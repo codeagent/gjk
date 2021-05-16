@@ -1,2 +1,2 @@
-import './bootstrap';
-// import './viewport';
+// import './bootstrap';
+import './viewport';
