@@ -24,7 +24,7 @@ import tetra from './objects/tetra.obj';
 
 import { AxesController } from './graphics/gizmos/axes-controller';
 import { gjk } from './gjk';
-import { createTetra } from './mesh';
+import { createSegment, createTetra, createTriangle } from './mesh';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 
@@ -39,14 +39,23 @@ const meshes = loadObj(tetra);
 
 const points = [
   vec3.fromValues(2.0, -0.25, 0.0),
-  vec3.fromValues(0.0, 1.0, 0.0),
   vec3.fromValues(-2.0, -0.15, -2),
+  vec3.fromValues(0.0, 1.0, 0.0),
   vec3.fromValues(-2.0, 0.25, 2)
 ];
+// const objGeometry = renderer.createGeometry(
+//   createTetra(points[0], points[1], points[2], points[3]),
+//   WebGL2RenderingContext.LINES
+// );
+// const objGeometry = renderer.createGeometry(
+//   createTriangle(points[0], points[1], points[2]),
+//   WebGL2RenderingContext.LINES
+// );
 const objGeometry = renderer.createGeometry(
-  createTetra(points[0], points[1], points[2], points[3]),
+  createSegment(points[0], points[1]),
   WebGL2RenderingContext.LINES
 );
+
 const icoGeometry = renderer.createGeometry(meshes['Ico']);
 const gridGeometry = renderer.createGeometry(
   createGrid(),
@@ -135,23 +144,36 @@ const draw = () => {
   );
 
   const point = pointAxes.targetTransform.position;
-  const closest = gjk.closestPointToTetrahedron(
+  // const closest = gjk.closestPointToTetrahedron(
+  //   transformed[0],
+  //   transformed[1],
+  //   transformed[2],
+  //   transformed[3],
+  //   point
+  // );
+
+  // const closest = gjk.closestPointToTriangle(
+  //   transformed[0],
+  //   transformed[1],
+  //   transformed[2],
+  //   point
+  // );
+
+  const closest = gjk.closestPointToLineSegment(
     transformed[0],
     transformed[1],
-    transformed[2],
-    transformed[3],
     point
   );
 
   drawables[2].transform.position = closest;
 
-  // document.getElementById('point').innerHTML = `[${point
-  //   .map(e => e.toFixed(2))
-  //   .join(', ')}]`;
+  document.getElementById('point').innerHTML = `[${point
+    .map(e => e.toFixed(2))
+    .join(', ')}]`;
 
-  // document.getElementById('closest').innerHTML = `[${Array.from(closest)
-  //   .map(e => e.toFixed(2))
-  //   .join(', ')}]`;
+  document.getElementById('closest').innerHTML = `[${Array.from(closest)
+    .map(e => e.toFixed(2))
+    .join(', ')}]`;
 
   requestAnimationFrame(draw);
 };

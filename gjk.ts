@@ -202,4 +202,100 @@ export namespace gjk {
     // we are in tetrahedron itself, return point
     return vec3.clone(p);
   };
+
+  export const closestPointToTriangle = (
+    a: vec3,
+    b: vec3,
+    c: vec3,
+    p: vec3
+  ): vec3 => {
+    const ab = vec3.subtract(vec3.create(), b, a);
+    const ac = vec3.subtract(vec3.create(), c, a);
+    const bc = vec3.subtract(vec3.create(), c, b);
+    const ap = vec3.subtract(vec3.create(), p, a);
+    const bp = vec3.subtract(vec3.create(), p, b);
+    const cp = vec3.subtract(vec3.create(), p, c);
+
+    // Compute parametric position s for projection P’ of P on AB,
+    // P’ = A + s*AB, s = snom/(snom+sdenom)
+    const snom = vec3.dot(ap, ab);
+    const sdenom = -vec3.dot(bp, ab);
+
+    // Compute parametric position t for projection P’ of P on AC,
+    // P’ = A + t*AC, s = tnom/(tnom+tdenom)
+    const tnom = vec3.dot(ap, ac);
+    const tdenom = -vec3.dot(cp, ac);
+    if (snom <= 0.0 && tnom <= 0.0) {
+      return a; // Vertex region early out
+    }
+    // Compute parametric position u for projection P’ of P on BC,
+    // P’ = B + u*BC, u = unom/(unom+udenom)
+    const unom = vec3.dot(bp, bc);
+    const udenom = -vec3.dot(cp, bc);
+    if (sdenom <= 0.0 && unom <= 0.0) {
+      return b; // Vertex region early out
+    }
+    if (tdenom <= 0.0 && udenom <= 0.0) {
+      return c; // Vertex region early out
+    }
+    // P is outside (or on) AB if the triple scalar product [N PA PB] <= 0
+    const n = vec3.cross(vec3.create(), ab, ac);
+    const vc = mixed(n, ap, bp);
+
+    // If P outside AB and within feature region of AB,
+    // return projection of P onto AB
+    if (vc <= 0.0 && snom >= 0.0 && sdenom >= 0.0) {
+      return vec3.scaleAndAdd(vec3.create(), a, ab, snom / (snom + sdenom));
+    }
+
+    // P is outside (or on) BC if the triple scalar product [N PB PC] <= 0
+    const va = mixed(n, bp, cp);
+
+    // If P outside BC and within feature region of BC,
+    // return projection of P onto BC
+    if (va <= 0.0 && unom >= 0.0 && udenom >= 0.0) {
+      return vec3.scaleAndAdd(vec3.create(), b, bc, unom / (unom + udenom));
+    }
+
+    // P is outside (or on) CA if the triple scalar product [N PC PA] <= 0
+    const vb = mixed(n, cp, ap);
+
+    // If P outside CA and within feature region of CA,
+    // return projection of P onto CA
+    if (vb <= 0.0 && tnom >= 0.0 && tdenom >= 0.0) {
+      return vec3.scaleAndAdd(vec3.create(), a, ac, tnom / (tnom + tdenom));
+    }
+
+    // P must project inside face region. Compute Q using barycentric coordinates
+    const u = va / (va + vb + vc);
+    const v = vb / (va + vb + vc);
+    const w = 1.0 - u - v; // = vc / (va + vb + vc)
+
+    const q = vec3.clone(a);
+    vec3.scale(q, q, u);
+    vec3.scaleAndAdd(q, q, b, v);
+    return vec3.scaleAndAdd(q, q, c, w);
+  };
+
+  export const closestPointToLineSegment = (
+    a: vec3,
+    b: vec3,
+    p: vec3
+  ): vec3 => {
+    const ab = vec3.sub(vec3.create(), b, a);
+    const ap = vec3.sub(vec3.create(), p, a);
+
+    // Project c onto ab, computing parameterized position d(t)=a+ t*(b – a)
+    let t = vec3.dot(ap, ab) / vec3.dot(ab, ab);
+    
+    // If outside segment, clamp t (and therefore d) to the closest endpoint
+    if (t < 0.0) {
+      t = 0.0;
+    }
+    if (t > 1.0) {
+      t = 1.0;
+    }
+    // Compute projected position from the clamped t
+    return vec3.scaleAndAdd(vec3.create(), a, ab, t);
+  };
 }

@@ -1,4 +1,5 @@
 import { glMatrix, vec3 } from 'gl-matrix';
+
 import { gjk } from './gjk';
 
 declare global {
@@ -24,7 +25,7 @@ describe('gjk', () => {
     });
   });
 
-  describe('gjk.closestPointToTetrahedron', () => {
+  describe('closestPointToTetrahedron', () => {
     const createCombinations = (points: vec3[]) => {
       const combinations = new Array<vec3[]>();
 
@@ -113,7 +114,6 @@ describe('gjk', () => {
           vec3.fromValues(-2.0, 0.25, 2)
         ]);
 
-        console.log(combinations);
         // Act
         const closests = [];
         for (let tetra of combinations) {
@@ -145,7 +145,6 @@ describe('gjk', () => {
           vec3.fromValues(-2.0, 0.25, 2)
         ]);
 
-        console.log(combinations);
         // Act
         const closests = [];
         for (let tetra of combinations) {
@@ -480,6 +479,277 @@ describe('gjk', () => {
           expect(closest).toBeCloseToPoint(expected);
         }
       });
+    });
+  });
+
+  describe('closestPointToTriangle', () => {
+    const createCombinations = (points: vec3[]) => {
+      const combinations = new Array<vec3[]>();
+
+      for (let i = 0; i < points.length - 1; i++) {
+        for (let j = i + 1; j < points.length; j++) {
+          const combination = Array.from(points);
+          combination[i] = points[j];
+          combination[j] = points[i];
+          combinations.push(combination);
+        }
+      }
+
+      return combinations.concat();
+    };
+
+    describe('should get closest points to all vertices', () => {
+      it('vertex 0', () => {
+        // Arrange
+        let point = vec3.fromValues(-3.89, 1.0, -1.45);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(0.0, 1.0, 0.0)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tri of combinations) {
+          closests.push(
+            gjk.closestPointToTriangle(tri[0], tri[1], tri[2], point)
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(-2.0, -0.15, -2.0);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
+
+      it('vertex 1', () => {
+        // Arrange
+        let point = vec3.fromValues(3.2, -3.99, -0.95);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(0.0, 1.0, 0.0)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tri of combinations) {
+          closests.push(
+            gjk.closestPointToTriangle(tri[0], tri[1], tri[2], point)
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(2.0, -0.25, 0.0);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
+
+      it('vertex 2', () => {
+        // Arrange
+        let point = vec3.fromValues(-2.83, 0.81, 7.15);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(0.0, 1.0, 0.0)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tri of combinations) {
+          closests.push(
+            gjk.closestPointToTriangle(tri[0], tri[1], tri[2], point)
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(0.0, 1.0, 0.0);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
+    });
+
+    describe('should get closest points to all edges', () => {
+      it('edge 0', () => {
+        // Arrange
+        let point = vec3.fromValues(-4.09, 0.81, 1.75);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(0.0, 1.0, 0.0)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tri of combinations) {
+          closests.push(
+            gjk.closestPointToTriangle(tri[0], tri[1], tri[2], point)
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(-1.05, 0.4, -1.05);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
+
+      it('edge 1', () => {
+        // Arrange
+        let point = vec3.fromValues(2.17, -4.37, -0.98);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(0.0, 1.0, 0.0)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tri of combinations) {
+          closests.push(
+            gjk.closestPointToTriangle(tri[0], tri[1], tri[2], point)
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(1.82, -0.25, -0.09);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
+
+      it('edge 2', () => {
+        // Arrange
+        let point = vec3.fromValues(-0.5, -2.12, 5.88);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(0.0, 1.0, 0.0)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tri of combinations) {
+          closests.push(
+            gjk.closestPointToTriangle(tri[0], tri[1], tri[2], point)
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(1.04, 0.35, 0.0);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
+    });
+
+    describe('should get closest points to face', () => {
+      it('face 0', () => {
+        // Arrange
+        let point = vec3.fromValues(0.6, 1.74, -2.6);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(0.0, 1.0, 0.0)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tri of combinations) {
+          closests.push(
+            gjk.closestPointToTriangle(tri[0], tri[1], tri[2], point)
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(-0.33, 0.24, -0.8);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
+    });
+  });
+
+  describe('closestPointToLineSegment', () => {
+    const createCombinations = (points: vec3[]) => {
+      const combinations = new Array<vec3[]>();
+
+      for (let i = 0; i < points.length - 1; i++) {
+        for (let j = i + 1; j < points.length; j++) {
+          const combination = Array.from(points);
+          combination[i] = points[j];
+          combination[j] = points[i];
+          combinations.push(combination);
+        }
+      }
+
+      return combinations.concat();
+    };
+
+    it('should get closest point at begin', () => {
+      // Arrange
+      let point = vec3.fromValues(2.53, 1.8, 2.66);
+      let combinations = createCombinations([
+        vec3.fromValues(2.0, -0.25, 0.0),
+        vec3.fromValues(-2.0, -0.15, -2)
+      ]);
+
+      // Act
+      const closests = [];
+      for (let seg of combinations) {
+        closests.push(gjk.closestPointToLineSegment(seg[0], seg[1], point));
+      }
+
+      // Assert
+      const expected = vec3.fromValues(2.0, -0.25, 0.0);
+      for (let closest of closests) {
+        expect(closest).toBeCloseToPoint(expected);
+      }
+    });
+
+    it('should get closest point at end', () => {
+      // Arrange
+      let point = vec3.fromValues(-2.65, -0.89, -4.79);
+      let combinations = createCombinations([
+        vec3.fromValues(2.0, -0.25, 0.0),
+        vec3.fromValues(-2.0, -0.15, -2)
+      ]);
+
+      // Act
+      const closests = [];
+      for (let seg of combinations) {
+        closests.push(gjk.closestPointToLineSegment(seg[0], seg[1], point));
+      }
+
+      // Assert
+      const expected = vec3.fromValues(-2.0, -0.15, -2);
+      for (let closest of closests) {
+        expect(closest).toBeCloseToPoint(expected);
+      }
+    });
+
+    it('should get closest point in betwen', () => {
+      // Arrange
+      let point = vec3.fromValues(-1.0, 1.81, -2.01);
+      let combinations = createCombinations([
+        vec3.fromValues(2.0, -0.25, 0.0),
+        vec3.fromValues(-2.0, -0.15, -2)
+      ]);
+
+      // Act
+      const closests = [];
+      for (let seg of combinations) {
+        closests.push(gjk.closestPointToLineSegment(seg[0], seg[1], point));
+      }
+
+      // Assert
+      const expected = vec3.fromValues(-1.25, -0.17, -1.62);
+      for (let closest of closests) {
+        expect(closest).toBeCloseToPoint(expected);
+      }
     });
   });
 });
