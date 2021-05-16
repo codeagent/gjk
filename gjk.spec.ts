@@ -1,9 +1,11 @@
 import { glMatrix, vec3 } from 'gl-matrix';
-import { closestPointToTetrahedron } from './gjk';
+import { gjk } from './gjk';
 
-declare namespace jasmine {
-  interface FunctionMatchers {
-    toBeCloseToPoint(point: vec3): boolean;
+declare global {
+  namespace jasmine {
+    interface Matchers<T> {
+      toBeCloseToPoint(point: vec3): boolean;
+    }
   }
 }
 
@@ -22,7 +24,7 @@ describe('gjk', () => {
     });
   });
 
-  describe('closestPointToTetrahedron', () => {
+  describe('gjk.closestPointToTetrahedron', () => {
     const createCombinations = (points: vec3[]) => {
       const combinations = new Array<vec3[]>();
 
@@ -53,7 +55,7 @@ describe('gjk', () => {
         const closests = [];
         for (let tetra of combinations) {
           closests.push(
-            closestPointToTetrahedron(
+            gjk.closestPointToTetrahedron(
               tetra[0],
               tetra[1],
               tetra[2],
@@ -84,7 +86,7 @@ describe('gjk', () => {
         const closests = [];
         for (let tetra of combinations) {
           closests.push(
-            closestPointToTetrahedron(
+            gjk.closestPointToTetrahedron(
               tetra[0],
               tetra[1],
               tetra[2],
@@ -116,7 +118,7 @@ describe('gjk', () => {
         const closests = [];
         for (let tetra of combinations) {
           closests.push(
-            closestPointToTetrahedron(
+            gjk.closestPointToTetrahedron(
               tetra[0],
               tetra[1],
               tetra[2],
@@ -148,7 +150,7 @@ describe('gjk', () => {
         const closests = [];
         for (let tetra of combinations) {
           closests.push(
-            closestPointToTetrahedron(
+            gjk.closestPointToTetrahedron(
               tetra[0],
               tetra[1],
               tetra[2],
@@ -167,7 +169,317 @@ describe('gjk', () => {
     });
 
     describe('should get closest points to all edges', () => {
-      it('edge 0', () => {});
+      it('edge 0', () => {
+        // Arrange
+        let point = vec3.fromValues(1.27, 1.0, 4.05);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(0.0, 1.0, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(-2.0, 0.25, 2)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tetra of combinations) {
+          closests.push(
+            gjk.closestPointToTetrahedron(
+              tetra[0],
+              tetra[1],
+              tetra[2],
+              tetra[3],
+              point
+            )
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(-0.3, 0.04, 1.15);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
+
+      it('edge 1', () => {
+        // Arrange
+        let point = vec3.fromValues(-3.92, -0.89, -1.28);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(0.0, 1.0, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(-2.0, 0.25, 2)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tetra of combinations) {
+          closests.push(
+            gjk.closestPointToTetrahedron(
+              tetra[0],
+              tetra[1],
+              tetra[2],
+              tetra[3],
+              point
+            )
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(-2.0, -0.09, -1.36);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
+
+      it('edge 2', () => {
+        // Arrange
+        let point = vec3.fromValues(1.93, 2.52, -6.12);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(0.0, 1.0, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(-2.0, 0.25, 2)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tetra of combinations) {
+          closests.push(
+            gjk.closestPointToTetrahedron(
+              tetra[0],
+              tetra[1],
+              tetra[2],
+              tetra[3],
+              point
+            )
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(-0.56, -0.19, -1.28);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
+
+      it('edge 3', () => {
+        // Arrange
+        let point = vec3.fromValues(-1.09, 5.52, 1.35);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(0.0, 1.0, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(-2.0, 0.25, 2)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tetra of combinations) {
+          closests.push(
+            gjk.closestPointToTetrahedron(
+              tetra[0],
+              tetra[1],
+              tetra[2],
+              tetra[3],
+              point
+            )
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(-0.34, 0.87, 0.34);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
+
+      it('edge 4', () => {
+        // Arrange
+        let point = vec3.fromValues(-0.73, 1.49, -3.39);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(0.0, 1.0, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(-2.0, 0.25, 2)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tetra of combinations) {
+          closests.push(
+            gjk.closestPointToTetrahedron(
+              tetra[0],
+              tetra[1],
+              tetra[2],
+              tetra[3],
+              point
+            )
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(-1.64, 0.04, -1.65);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
+
+      it('edge 5', () => {
+        // Arrange
+        let point = vec3.fromValues(2.2, 2.05, -1.02);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(0.0, 1.0, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(-2.0, 0.25, 2)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tetra of combinations) {
+          closests.push(
+            gjk.closestPointToTetrahedron(
+              tetra[0],
+              tetra[1],
+              tetra[2],
+              tetra[3],
+              point
+            )
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(1.11, 0.3, 0.0);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
+    });
+
+    describe('should get closest points to all faces', () => {
+      it('face 0', () => {
+        // Arrange
+        let point = vec3.fromValues(0.45, 2.5, 3.11);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(0.0, 1.0, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(-2.0, 0.25, 2)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tetra of combinations) {
+          closests.push(
+            gjk.closestPointToTetrahedron(
+              tetra[0],
+              tetra[1],
+              tetra[2],
+              tetra[3],
+              point
+            )
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(-0.83, 0.45, 1.07);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
+
+      it('face 1', () => {
+        // Arrange
+        let point = vec3.fromValues(-2.94, 3.13, -1.34);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(0.0, 1.0, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(-2.0, 0.25, 2)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tetra of combinations) {
+          closests.push(
+            gjk.closestPointToTetrahedron(
+              tetra[0],
+              tetra[1],
+              tetra[2],
+              tetra[3],
+              point
+            )
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(-1.53, 0.17, -1.04);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
+
+      it('face 2', () => {
+        // Arrange
+        let point = vec3.fromValues(2.66, 3.07, -3.86);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(0.0, 1.0, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(-2.0, 0.25, 2)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tetra of combinations) {
+          closests.push(
+            gjk.closestPointToTetrahedron(
+              tetra[0],
+              tetra[1],
+              tetra[2],
+              tetra[3],
+              point
+            )
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(0.81, 0.12, -0.31);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
+
+      it('face 3', () => {
+        // Arrange
+        let point = vec3.fromValues(-1.48, -1.78, -1.15);
+        let combinations = createCombinations([
+          vec3.fromValues(2.0, -0.25, 0.0),
+          vec3.fromValues(0.0, 1.0, 0.0),
+          vec3.fromValues(-2.0, -0.15, -2),
+          vec3.fromValues(-2.0, 0.25, 2)
+        ]);
+
+        // Act
+        const closests = [];
+        for (let tetra of combinations) {
+          closests.push(
+            gjk.closestPointToTetrahedron(
+              tetra[0],
+              tetra[1],
+              tetra[2],
+              tetra[3],
+              point
+            )
+          );
+        }
+
+        // Assert
+        const expected = vec3.fromValues(-1.35, -0.13, -1.31);
+        for (let closest of closests) {
+          expect(closest).toBeCloseToPoint(expected);
+        }
+      });
     });
   });
 });
