@@ -1,4 +1,4 @@
-import { mat4, vec3 } from 'gl-matrix';
+import { mat4, vec2, vec3, vec4 } from 'gl-matrix';
 
 export namespace gjk {
   /**
@@ -10,17 +10,33 @@ export namespace gjk {
     return vec3.dot(a, tmp);
   };
 
+  export const fromBarycentric = <T extends ArrayLike<number>>(
+    out: vec3,
+    points: vec3[],
+    barycentric: T
+  ) => {
+    vec3.set(out, 0.0, 0.0, 0.0);
+    for (let i = 0; i < barycentric.length; i++) {
+      vec3.scaleAndAdd(out, out, points[i], barycentric[i]);
+    }
+    return out;
+  };
+
   export interface ISupportMappable {
     support(transform: mat4, dir: vec3): vec3;
   }
 
+  /**
+   * out - barycetric coords
+   */
   export const closestPointToTetrahedron = (
+    out: vec4,
     a: vec3,
     b: vec3,
     c: vec3,
     d: vec3,
     p: vec3
-  ): vec3 => {
+  ): vec4 => {
     // check voronoi region of a
     const ap = vec3.subtract(vec3.create(), p, a);
     const ab = vec3.subtract(vec3.create(), b, a);
@@ -31,7 +47,7 @@ export namespace gjk {
     const apOad = vec3.dot(ap, ad);
 
     if (apOab <= 0 && apOac <= 0 && apOad <= 0) {
-      return a;
+      return vec4.set(out, 1.0, 0.0, 0.0, 0.0);
     }
 
     // check voronoi region of b
@@ -43,7 +59,7 @@ export namespace gjk {
     const bpObd = vec3.dot(bp, bd);
 
     if (bpOba <= 0 && bpObc <= 0 && bpObd <= 0) {
-      return b;
+      return vec4.set(out, 0.0, 1.0, 0.0, 0.0);
     }
 
     // check voronoi region of c
@@ -54,7 +70,7 @@ export namespace gjk {
     const cpOcd = vec3.dot(cp, cd);
 
     if (cpOca <= 0 && cpOcb <= 0 && cpOcd <= 0) {
-      return c;
+      return vec4.set(out, 0.0, 0.0, 1.0, 0.0);
     }
 
     // check voronoi region of d
@@ -64,7 +80,7 @@ export namespace gjk {
     const dpOdc = -vec3.dot(dp, cd);
 
     if (dpOda <= 0 && dpOdb <= 0 && dpOdc <= 0) {
-      return d;
+      return vec4.set(out, 0.0, 0.0, 0.0, 1.0);
     }
 
     // check voronoi region of ab edge
@@ -74,7 +90,7 @@ export namespace gjk {
     const apOnAbdXab = mixed(ap, nAbd, ab);
     if (apOab >= 0 && bpOba >= 0 && apOabXnAbc >= 0 && apOnAbdXab >= 0) {
       const t = apOab / vec3.dot(ab, ab);
-      return vec3.scaleAndAdd(vec3.create(), a, ab, t);
+      return vec4.set(out, 1.0 - t, t, 0.0, 0.0);
     }
 
     // check voronoi region of ac edge
@@ -83,7 +99,7 @@ export namespace gjk {
     const apOacXnAcd = mixed(ap, ac, nAcd);
     if (apOac >= 0 && cpOca >= 0 && apOnAbcXac >= 0 && apOacXnAcd >= 0) {
       const t = apOac / vec3.dot(ac, ac);
-      return vec3.scaleAndAdd(vec3.create(), a, ac, t);
+      return vec4.set(out, 1.0 - t, 0.0, t, 0.0);
     }
 
     // check voronoi region of ad edge
@@ -91,7 +107,8 @@ export namespace gjk {
     const apOadXnAbd = mixed(ap, ad, nAbd);
     if (apOad >= 0 && dpOda >= 0 && apOnAcdXad >= 0 && apOadXnAbd >= 0) {
       const t = apOad / vec3.dot(ad, ad);
-      return vec3.scaleAndAdd(vec3.create(), a, ad, t);
+      vec4.set(out, 1.0 - t, 0.0, 0.0, t);
+      return;
     }
 
     // check voronoi region of bc edge
@@ -100,7 +117,7 @@ export namespace gjk {
     const bpOnBcdXbc = mixed(bp, nBcd, bc);
     if (bpObc >= 0 && cpOcb >= 0 && bpObcXnAbc >= 0 && bpOnBcdXbc >= 0) {
       const t = bpObc / vec3.dot(bc, bc);
-      return vec3.scaleAndAdd(vec3.create(), b, bc, t);
+      return vec4.set(out, 0.0, 1.0 - t, t, 0.0);
     }
 
     // check voronoi region of cd edge
@@ -108,7 +125,7 @@ export namespace gjk {
     const cpOnBcdXcd = mixed(cp, nBcd, cd);
     if (cpOcd >= 0 && dpOdc >= 0 && cpOcdXnAcd >= 0 && cpOnBcdXcd >= 0) {
       const t = cpOcd / vec3.dot(cd, cd);
-      return vec3.scaleAndAdd(vec3.create(), c, cd, t);
+      return vec4.set(out, 0.0, 0.0, 1.0 - t, t);
     }
 
     // check voronoi region of bd edge
@@ -116,7 +133,7 @@ export namespace gjk {
     const bpObdXnBcd = mixed(bp, bd, nBcd);
     if (bpObd >= 0 && dpOdb >= 0 && bpOnAbdXbd >= 0 && bpObdXnBcd >= 0) {
       const t = bpObd / vec3.dot(bd, bd);
-      return vec3.scaleAndAdd(vec3.create(), b, bd, t);
+      return vec4.set(out, 0.0, 1.0 - t, 0.0, t);
     }
 
     // find closest point on abc
@@ -133,11 +150,7 @@ export namespace gjk {
       u /= s;
       v /= s;
       w /= s;
-
-      const q = vec3.clone(a);
-      vec3.scale(q, q, u);
-      vec3.scaleAndAdd(q, q, b, v);
-      return vec3.scaleAndAdd(q, q, c, w);
+      return vec4.set(out, u, v, w, 0.0);
     }
 
     // find closest point on acd
@@ -154,11 +167,7 @@ export namespace gjk {
       u /= s;
       v /= s;
       w /= s;
-
-      const q = vec3.clone(a);
-      vec3.scale(q, q, u);
-      vec3.scaleAndAdd(q, q, c, v);
-      return vec3.scaleAndAdd(q, q, d, w);
+      return vec4.set(out, u, 0.0, v, w);
     }
 
     // find closest point on adb
@@ -175,11 +184,7 @@ export namespace gjk {
       u /= s;
       v /= s;
       w /= s;
-
-      const q = vec3.clone(a);
-      vec3.scale(q, q, u);
-      vec3.scaleAndAdd(q, q, d, v);
-      return vec3.scaleAndAdd(q, q, b, w);
+      return vec4.set(out, u, w, 0.0, v);
     }
 
     // find closest point on cbd
@@ -196,18 +201,15 @@ export namespace gjk {
       u /= s;
       v /= s;
       w /= s;
-
-      const q = vec3.clone(c);
-      vec3.scale(q, q, u);
-      vec3.scaleAndAdd(q, q, b, v);
-      return vec3.scaleAndAdd(q, q, d, w);
+      return vec4.set(out, 0.0, v, u, w);
     }
 
     // we are in tetrahedron itself, return point
-    return vec3.clone(p);
+    return vec4.set(out, -1.0, -1.0, -1.0, -1.0);
   };
 
   export const closestPointToTriangle = (
+    out: vec3,
     a: vec3,
     b: vec3,
     c: vec3,
@@ -230,17 +232,17 @@ export namespace gjk {
     const tnom = vec3.dot(ap, ac);
     const tdenom = -vec3.dot(cp, ac);
     if (snom <= 0.0 && tnom <= 0.0) {
-      return a; // Vertex region early out
+      return vec3.set(out, 1.0, 0.0, 0.0); // Vertex region early out
     }
     // Compute parametric position u for projection P’ of P on BC,
     // P’ = B + u*BC, u = unom/(unom+udenom)
     const unom = vec3.dot(bp, bc);
     const udenom = -vec3.dot(cp, bc);
     if (sdenom <= 0.0 && unom <= 0.0) {
-      return b; // Vertex region early out
+      return vec3.set(out, 0.0, 1.0, 0.0); // Vertex region early out
     }
     if (tdenom <= 0.0 && udenom <= 0.0) {
-      return c; // Vertex region early out
+      return vec3.set(out, 0.0, 0.0, 1.0); // Vertex region early out
     }
     // P is outside (or on) AB if the triple scalar product [N PA PB] <= 0
     const n = vec3.cross(vec3.create(), ab, ac);
@@ -249,7 +251,8 @@ export namespace gjk {
     // If P outside AB and within feature region of AB,
     // return projection of P onto AB
     if (vc <= 0.0 && snom >= 0.0 && sdenom >= 0.0) {
-      return vec3.scaleAndAdd(vec3.create(), a, ab, snom / (snom + sdenom));
+      const t = snom / (snom + sdenom);
+      return vec3.set(out, 1.0 - t, t, 0.0);
     }
 
     // P is outside (or on) BC if the triple scalar product [N PB PC] <= 0
@@ -258,7 +261,8 @@ export namespace gjk {
     // If P outside BC and within feature region of BC,
     // return projection of P onto BC
     if (va <= 0.0 && unom >= 0.0 && udenom >= 0.0) {
-      return vec3.scaleAndAdd(vec3.create(), b, bc, unom / (unom + udenom));
+      const t = unom / (unom + udenom);
+      return vec3.set(out, 0.0, 1.0 - t, t);
     }
 
     // P is outside (or on) CA if the triple scalar product [N PC PA] <= 0
@@ -267,7 +271,8 @@ export namespace gjk {
     // If P outside CA and within feature region of CA,
     // return projection of P onto CA
     if (vb <= 0.0 && tnom >= 0.0 && tdenom >= 0.0) {
-      return vec3.scaleAndAdd(vec3.create(), a, ac, tnom / (tnom + tdenom));
+      const t = tnom / (tnom + tdenom);
+      return vec3.set(out, 1.0 - t, 0.0, t);
     }
 
     // P must project inside face region. Compute Q using barycentric coordinates
@@ -275,17 +280,15 @@ export namespace gjk {
     const v = vb / (va + vb + vc);
     const w = 1.0 - u - v; // = vc / (va + vb + vc)
 
-    const q = vec3.clone(a);
-    vec3.scale(q, q, u);
-    vec3.scaleAndAdd(q, q, b, v);
-    return vec3.scaleAndAdd(q, q, c, w);
+    return vec3.set(out, u, v, w);
   };
 
   export const closestPointToLineSegment = (
+    out: vec2,
     a: vec3,
     b: vec3,
     p: vec3
-  ): vec3 => {
+  ): vec2 => {
     const ab = vec3.sub(vec3.create(), b, a);
     const ap = vec3.sub(vec3.create(), p, a);
 
@@ -299,8 +302,8 @@ export namespace gjk {
     if (t > 1.0) {
       t = 1.0;
     }
-    // Compute projected position from the clamped t
-    return vec3.scaleAndAdd(vec3.create(), a, ab, t);
+
+    return vec2.set(out, 1.0 - t, t);
   };
 
   export const closestPoints = (

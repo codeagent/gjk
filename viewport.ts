@@ -2,7 +2,7 @@ import './style.css';
 
 import { fromEvent } from 'rxjs';
 import { map, filter } from 'rxjs/operators';
-import { vec3, vec4 } from 'gl-matrix';
+import { vec2, vec3, vec4 } from 'gl-matrix';
 
 import {
   ArcRotationCameraController,
@@ -43,18 +43,18 @@ const points = [
   vec3.fromValues(0.0, 1.0, 0.0),
   vec3.fromValues(-2.0, 0.25, 2)
 ];
-// const objGeometry = renderer.createGeometry(
-//   createTetra(points[0], points[1], points[2], points[3]),
-//   WebGL2RenderingContext.LINES
-// );
+const objGeometry = renderer.createGeometry(
+  createTetra(points[0], points[1], points[2], points[3]),
+  WebGL2RenderingContext.LINES
+);
 // const objGeometry = renderer.createGeometry(
 //   createTriangle(points[0], points[1], points[2]),
 //   WebGL2RenderingContext.LINES
 // );
-const objGeometry = renderer.createGeometry(
-  createSegment(points[0], points[1]),
-  WebGL2RenderingContext.LINES
-);
+// const objGeometry = renderer.createGeometry(
+//   createSegment(points[0], points[1]),
+//   WebGL2RenderingContext.LINES
+// );
 
 const icoGeometry = renderer.createGeometry(meshes['Ico']);
 const gridGeometry = renderer.createGeometry(
@@ -107,7 +107,6 @@ const pointAxes = new AxesController(
   new Transform([2, 1, 3])
 );
 
-console.log(meshes);
 fromEvent(document, 'keydown')
   .pipe(
     filter((e: KeyboardEvent) => ['q', 'w', 'e'].includes(e.key)),
@@ -144,26 +143,52 @@ const draw = () => {
   );
 
   const point = pointAxes.targetTransform.position;
-  // const closest = gjk.closestPointToTetrahedron(
-  //   transformed[0],
-  //   transformed[1],
-  //   transformed[2],
-  //   transformed[3],
-  //   point
-  // );
+  const closest = vec3.create();
 
-  // const closest = gjk.closestPointToTriangle(
-  //   transformed[0],
-  //   transformed[1],
-  //   transformed[2],
-  //   point
-  // );
-
-  const closest = gjk.closestPointToLineSegment(
+  const barycentric = vec4.create();
+  gjk.closestPointToTetrahedron(
+    barycentric,
     transformed[0],
     transformed[1],
+    transformed[2],
+    transformed[3],
     point
   );
+
+  gjk.fromBarycentric(
+    closest,
+    [transformed[0], transformed[1], transformed[2], transformed[3]],
+    barycentric
+  );
+
+  // const barycentric = vec3.create();
+  // gjk.closestPointToTriangle(
+  //   barycentric,
+  //   transformed[0],
+  //   transformed[1],
+  //   transformed[2],
+  //   point
+  // );
+
+  // gjk.fromBarycentric(
+  //   closest,
+  //   [transformed[0], transformed[1], transformed[2]],
+  //   barycentric
+  // );
+
+  // const barycentric = vec2.create();
+  // gjk.closestPointToLineSegment(
+  //   barycentric,
+  //   transformed[0],
+  //   transformed[1],
+  //   point
+  // );
+
+  // gjk.fromBarycentric(
+  //   closest,
+  //   [transformed[0], transformed[1], transformed[2]],
+  //   barycentric
+  // );
 
   drawables[2].transform.position = closest;
 

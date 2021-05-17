@@ -1,4 +1,4 @@
-import { glMatrix, vec3 } from 'gl-matrix';
+import { glMatrix, vec2, vec3, vec4 } from 'gl-matrix';
 
 import { gjk } from './gjk';
 
@@ -6,6 +6,7 @@ declare global {
   namespace jasmine {
     interface Matchers<T> {
       toBeCloseToPoint(point: vec3): boolean;
+      toBeCloseToPoint(point: vec4): boolean;
     }
   }
 }
@@ -16,11 +17,12 @@ describe('gjk', () => {
 
     jasmine.addMatchers({
       toBeCloseToPoint: () => ({
-        compare: (actual: vec3, expected: vec3) => {
-          return {
-            pass: vec3.equals(actual, expected)
-          };
-        }
+        compare: <T extends Float32Array>(actual: T, expected: T) => ({
+          pass:
+            actual.length === 3
+              ? vec3.equals(actual, expected)
+              : vec4.equals(actual, expected)
+        })
       })
     });
   });
@@ -41,6 +43,8 @@ describe('gjk', () => {
       return combinations.concat();
     };
 
+    const barycentric = vec4.create();
+
     describe('should get closest points to all vertices', () => {
       it('vertex 0', () => {
         // Arrange
@@ -55,15 +59,15 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tetra of combinations) {
-          closests.push(
-            gjk.closestPointToTetrahedron(
-              tetra[0],
-              tetra[1],
-              tetra[2],
-              tetra[3],
-              point
-            )
+          gjk.closestPointToTetrahedron(
+            barycentric,
+            tetra[0],
+            tetra[1],
+            tetra[2],
+            tetra[3],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tetra, barycentric));
         }
 
         // Assert
@@ -86,15 +90,15 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tetra of combinations) {
-          closests.push(
-            gjk.closestPointToTetrahedron(
-              tetra[0],
-              tetra[1],
-              tetra[2],
-              tetra[3],
-              point
-            )
+          gjk.closestPointToTetrahedron(
+            barycentric,
+            tetra[0],
+            tetra[1],
+            tetra[2],
+            tetra[3],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tetra, barycentric));
         }
 
         // Assert
@@ -117,15 +121,15 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tetra of combinations) {
-          closests.push(
-            gjk.closestPointToTetrahedron(
-              tetra[0],
-              tetra[1],
-              tetra[2],
-              tetra[3],
-              point
-            )
+          gjk.closestPointToTetrahedron(
+            barycentric,
+            tetra[0],
+            tetra[1],
+            tetra[2],
+            tetra[3],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tetra, barycentric));
         }
 
         // Assert
@@ -148,15 +152,15 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tetra of combinations) {
-          closests.push(
-            gjk.closestPointToTetrahedron(
-              tetra[0],
-              tetra[1],
-              tetra[2],
-              tetra[3],
-              point
-            )
+          gjk.closestPointToTetrahedron(
+            barycentric,
+            tetra[0],
+            tetra[1],
+            tetra[2],
+            tetra[3],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tetra, barycentric));
         }
 
         // Assert
@@ -181,15 +185,15 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tetra of combinations) {
-          closests.push(
-            gjk.closestPointToTetrahedron(
-              tetra[0],
-              tetra[1],
-              tetra[2],
-              tetra[3],
-              point
-            )
+          gjk.closestPointToTetrahedron(
+            barycentric,
+            tetra[0],
+            tetra[1],
+            tetra[2],
+            tetra[3],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tetra, barycentric));
         }
 
         // Assert
@@ -212,15 +216,15 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tetra of combinations) {
-          closests.push(
-            gjk.closestPointToTetrahedron(
-              tetra[0],
-              tetra[1],
-              tetra[2],
-              tetra[3],
-              point
-            )
+          gjk.closestPointToTetrahedron(
+            barycentric,
+            tetra[0],
+            tetra[1],
+            tetra[2],
+            tetra[3],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tetra, barycentric));
         }
 
         // Assert
@@ -243,15 +247,15 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tetra of combinations) {
-          closests.push(
-            gjk.closestPointToTetrahedron(
-              tetra[0],
-              tetra[1],
-              tetra[2],
-              tetra[3],
-              point
-            )
+          gjk.closestPointToTetrahedron(
+            barycentric,
+            tetra[0],
+            tetra[1],
+            tetra[2],
+            tetra[3],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tetra, barycentric));
         }
 
         // Assert
@@ -274,15 +278,15 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tetra of combinations) {
-          closests.push(
-            gjk.closestPointToTetrahedron(
-              tetra[0],
-              tetra[1],
-              tetra[2],
-              tetra[3],
-              point
-            )
+          gjk.closestPointToTetrahedron(
+            barycentric,
+            tetra[0],
+            tetra[1],
+            tetra[2],
+            tetra[3],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tetra, barycentric));
         }
 
         // Assert
@@ -305,15 +309,16 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tetra of combinations) {
-          closests.push(
-            gjk.closestPointToTetrahedron(
-              tetra[0],
-              tetra[1],
-              tetra[2],
-              tetra[3],
-              point
-            )
+          gjk.closestPointToTetrahedron(
+            barycentric,
+            tetra[0],
+            tetra[1],
+            tetra[2],
+            tetra[3],
+            point
           );
+
+          closests.push(gjk.fromBarycentric(vec3.create(), tetra, barycentric));
         }
 
         // Assert
@@ -336,15 +341,15 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tetra of combinations) {
-          closests.push(
-            gjk.closestPointToTetrahedron(
-              tetra[0],
-              tetra[1],
-              tetra[2],
-              tetra[3],
-              point
-            )
+          gjk.closestPointToTetrahedron(
+            barycentric,
+            tetra[0],
+            tetra[1],
+            tetra[2],
+            tetra[3],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tetra, barycentric));
         }
 
         // Assert
@@ -369,15 +374,15 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tetra of combinations) {
-          closests.push(
-            gjk.closestPointToTetrahedron(
-              tetra[0],
-              tetra[1],
-              tetra[2],
-              tetra[3],
-              point
-            )
+          gjk.closestPointToTetrahedron(
+            barycentric,
+            tetra[0],
+            tetra[1],
+            tetra[2],
+            tetra[3],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tetra, barycentric));
         }
 
         // Assert
@@ -400,15 +405,15 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tetra of combinations) {
-          closests.push(
-            gjk.closestPointToTetrahedron(
-              tetra[0],
-              tetra[1],
-              tetra[2],
-              tetra[3],
-              point
-            )
+          gjk.closestPointToTetrahedron(
+            barycentric,
+            tetra[0],
+            tetra[1],
+            tetra[2],
+            tetra[3],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tetra, barycentric));
         }
 
         // Assert
@@ -431,15 +436,15 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tetra of combinations) {
-          closests.push(
-            gjk.closestPointToTetrahedron(
-              tetra[0],
-              tetra[1],
-              tetra[2],
-              tetra[3],
-              point
-            )
+          gjk.closestPointToTetrahedron(
+            barycentric,
+            tetra[0],
+            tetra[1],
+            tetra[2],
+            tetra[3],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tetra, barycentric));
         }
 
         // Assert
@@ -462,15 +467,15 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tetra of combinations) {
-          closests.push(
-            gjk.closestPointToTetrahedron(
-              tetra[0],
-              tetra[1],
-              tetra[2],
-              tetra[3],
-              point
-            )
+          gjk.closestPointToTetrahedron(
+            barycentric,
+            tetra[0],
+            tetra[1],
+            tetra[2],
+            tetra[3],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tetra, barycentric));
         }
 
         // Assert
@@ -479,6 +484,38 @@ describe('gjk', () => {
           expect(closest).toBeCloseToPoint(expected);
         }
       });
+    });
+
+    it('should get closest point inside of tetra', () => {
+      // Arrange
+      let point = vec3.fromValues(-0.62, 0.15, 0.4);
+      let combinations = createCombinations([
+        vec3.fromValues(2.0, -0.25, 0.0),
+        vec3.fromValues(0.0, 1.0, 0.0),
+        vec3.fromValues(-2.0, -0.15, -2),
+        vec3.fromValues(-2.0, 0.25, 2)
+      ]);
+
+      // Act
+      const barycentric = [];
+      for (let tetra of combinations) {
+        const b = vec4.create();
+        gjk.closestPointToTetrahedron(
+          b,
+          tetra[0],
+          tetra[1],
+          tetra[2],
+          tetra[3],
+          point
+        );
+        barycentric.push(b);
+      }
+
+      // Assert
+      const expected = vec4.fromValues(-1.0, -1.0, -1.0, -1.0);
+      for (let bary of barycentric) {
+        expect(bary).toBeCloseToPoint(expected);
+      }
     });
   });
 
@@ -498,6 +535,8 @@ describe('gjk', () => {
       return combinations.concat();
     };
 
+    const barycentric = vec3.create();
+
     describe('should get closest points to all vertices', () => {
       it('vertex 0', () => {
         // Arrange
@@ -511,9 +550,14 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tri of combinations) {
-          closests.push(
-            gjk.closestPointToTriangle(tri[0], tri[1], tri[2], point)
+          gjk.closestPointToTriangle(
+            barycentric,
+            tri[0],
+            tri[1],
+            tri[2],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tri, barycentric));
         }
 
         // Assert
@@ -535,9 +579,14 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tri of combinations) {
-          closests.push(
-            gjk.closestPointToTriangle(tri[0], tri[1], tri[2], point)
+          gjk.closestPointToTriangle(
+            barycentric,
+            tri[0],
+            tri[1],
+            tri[2],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tri, barycentric));
         }
 
         // Assert
@@ -559,9 +608,14 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tri of combinations) {
-          closests.push(
-            gjk.closestPointToTriangle(tri[0], tri[1], tri[2], point)
+          gjk.closestPointToTriangle(
+            barycentric,
+            tri[0],
+            tri[1],
+            tri[2],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tri, barycentric));
         }
 
         // Assert
@@ -585,9 +639,14 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tri of combinations) {
-          closests.push(
-            gjk.closestPointToTriangle(tri[0], tri[1], tri[2], point)
+          gjk.closestPointToTriangle(
+            barycentric,
+            tri[0],
+            tri[1],
+            tri[2],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tri, barycentric));
         }
 
         // Assert
@@ -609,11 +668,15 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tri of combinations) {
-          closests.push(
-            gjk.closestPointToTriangle(tri[0], tri[1], tri[2], point)
+          gjk.closestPointToTriangle(
+            barycentric,
+            tri[0],
+            tri[1],
+            tri[2],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tri, barycentric));
         }
-
         // Assert
         const expected = vec3.fromValues(1.82, -0.25, -0.09);
         for (let closest of closests) {
@@ -633,9 +696,14 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tri of combinations) {
-          closests.push(
-            gjk.closestPointToTriangle(tri[0], tri[1], tri[2], point)
+          gjk.closestPointToTriangle(
+            barycentric,
+            tri[0],
+            tri[1],
+            tri[2],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tri, barycentric));
         }
 
         // Assert
@@ -659,9 +727,14 @@ describe('gjk', () => {
         // Act
         const closests = [];
         for (let tri of combinations) {
-          closests.push(
-            gjk.closestPointToTriangle(tri[0], tri[1], tri[2], point)
+          gjk.closestPointToTriangle(
+            barycentric,
+            tri[0],
+            tri[1],
+            tri[2],
+            point
           );
+          closests.push(gjk.fromBarycentric(vec3.create(), tri, barycentric));
         }
 
         // Assert
@@ -689,6 +762,8 @@ describe('gjk', () => {
       return combinations.concat();
     };
 
+    const barycentric = vec2.create();
+
     it('should get closest point at begin', () => {
       // Arrange
       let point = vec3.fromValues(2.53, 1.8, 2.66);
@@ -697,10 +772,10 @@ describe('gjk', () => {
         vec3.fromValues(-2.0, -0.15, -2)
       ]);
 
-      // Act
       const closests = [];
       for (let seg of combinations) {
-        closests.push(gjk.closestPointToLineSegment(seg[0], seg[1], point));
+        gjk.closestPointToLineSegment(barycentric, seg[0], seg[1], point);
+        closests.push(gjk.fromBarycentric(vec3.create(), seg, barycentric));
       }
 
       // Assert
@@ -721,7 +796,8 @@ describe('gjk', () => {
       // Act
       const closests = [];
       for (let seg of combinations) {
-        closests.push(gjk.closestPointToLineSegment(seg[0], seg[1], point));
+        gjk.closestPointToLineSegment(barycentric, seg[0], seg[1], point);
+        closests.push(gjk.fromBarycentric(vec3.create(), seg, barycentric));
       }
 
       // Assert
@@ -742,7 +818,8 @@ describe('gjk', () => {
       // Act
       const closests = [];
       for (let seg of combinations) {
-        closests.push(gjk.closestPointToLineSegment(seg[0], seg[1], point));
+        gjk.closestPointToLineSegment(barycentric, seg[0], seg[1], point);
+        closests.push(gjk.fromBarycentric(vec3.create(), seg, barycentric));
       }
 
       // Assert
