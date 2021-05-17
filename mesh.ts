@@ -116,3 +116,31 @@ export const createSegment = (p0: vec3, p1: vec3): Mesh => ({
   vertexData: new Float32Array([...p0, ...SECONDARY, ...p1, ...SECONDARY]),
   indexData: Uint16Array.from([0, 1])
 });
+
+export const getPositions = (mesh: Mesh): vec3[] => {
+  const sem = mesh.vertexFormat.find(f => f.semantics === 'position');
+  const iset = new Set<number>();
+  const pos: vec3[] = [];
+
+  for (let i of Array.from(mesh.indexData)) {
+    if (iset.has(i)) {
+      continue;
+    }
+    iset.add(i);
+    pos.push(
+      vec3.fromValues(
+        mesh.vertexData[
+          sem.offset / Float32Array.BYTES_PER_ELEMENT + sem.size * i
+        ],
+        mesh.vertexData[
+          sem.offset / Float32Array.BYTES_PER_ELEMENT + sem.size * i + 1
+        ],
+        mesh.vertexData[
+          sem.offset / Float32Array.BYTES_PER_ELEMENT + sem.size * i + 2
+        ]
+      )
+    );
+  }
+
+  return pos;
+};
