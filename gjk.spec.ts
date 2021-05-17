@@ -807,7 +807,7 @@ describe('gjk', () => {
       }
     });
 
-    it('should get closest point in betwen', () => {
+    it('should get closest point in between', () => {
       // Arrange
       let point = vec3.fromValues(-1.0, 1.81, -2.01);
       let combinations = createCombinations([

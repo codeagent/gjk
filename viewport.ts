@@ -30,6 +30,7 @@ import {
   createTriangle,
   getPositions
 } from './mesh';
+import { Polyhedra } from './shape';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 
@@ -42,8 +43,8 @@ const phongShader = renderer.createShader(phongVertex, phongFragment);
 const flatShader = renderer.createShader(flatVertex, flatFragment);
 const meshes = loadObj(objects);
 
-const object1 = renderer.createGeometry(meshes['object1']);
-const object2 = renderer.createGeometry(meshes['object2']);
+const object0 = renderer.createGeometry(meshes['object1']);
+const object1 = renderer.createGeometry(meshes['object2']);
 
 const gridGeometry = renderer.createGeometry(
   createGrid(),
@@ -72,7 +73,7 @@ const drawables = [
       },
       state: { cullFace: false }
     },
-    geometry: object1,
+    geometry: object0,
     transform: new Transform()
   },
   {
@@ -83,8 +84,8 @@ const drawables = [
       },
       state: { cullFace: false }
     },
-    geometry: object2,
-    transform: new Transform(vec3.fromValues(2.0, 1.0, 0.0))
+    geometry: object1,
+    transform: new Transform(vec3.fromValues(2.0, 0.0, 0.0))
   }
 ];
 
@@ -100,7 +101,9 @@ fromEvent(document, 'keydown')
   )
   .subscribe(mode => (axes0.mode = axes1.mode = mode));
 
-console.log(getPositions(meshes['object1']));
+const shape0 = new Polyhedra(getPositions(meshes['object1']));
+const shape1 = new Polyhedra(getPositions(meshes['object2']));
+console.log(shape0, shape1);
 
 // Loop
 const draw = () => {
@@ -123,6 +126,16 @@ const draw = () => {
   const pixes = renderer.readAsIdMap();
   axes0.update(pixes);
   axes1.update(pixes);
+
+  //
+  const distance = gjk.distance(
+    shape0,
+    axes0.targetTransform.transform,
+    shape1,
+    axes1.targetTransform.transform
+  );
+
+  document.getElementById('distance').innerHTML = `${distance}`;
 
   requestAnimationFrame(draw);
 };

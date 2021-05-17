@@ -19,6 +19,7 @@ export namespace gjk {
     for (let i = 0; i < barycentric.length; i++) {
       vec3.scaleAndAdd(out, out, points[i], barycentric[i]);
     }
+
     return out;
   };
 
@@ -317,7 +318,7 @@ export namespace gjk {
     const support = (out: vec3, dir: vec3) =>
       vec3.subtract(
         out,
-        mappable0.support(out, transform0, dir),
+        mappable0.support(vec3.create(), transform0, dir),
         mappable1.support(
           vec3.create(),
           transform1,
@@ -340,9 +341,9 @@ export namespace gjk {
     // simplex.add(support(vec3.create(), d));
 
     const o = vec3.create();
-    let i = MAX_ITERATIONS;
+    let j = MAX_ITERATIONS;
 
-    while (--i >= 0) {
+    while (--j >= 0) {
       if (simplex.size === 1) {
         const p = Array.from(simplex.values());
         vec3.copy(d, p[0]);
@@ -371,6 +372,7 @@ export namespace gjk {
         const b = vec4.create();
         closestPointToTetrahedron(b, p[0], p[1], p[2], p[3], o);
         if (b[0] < 0.0 || b[1] < 0.0 || b[2] < 0.0 || b[3] < 0.0) {
+          debugger;
           return 0.0;
         }
         for (let i = 0; i < 4; i++) {
@@ -381,13 +383,25 @@ export namespace gjk {
         fromBarycentric(d, p, b);
       }
 
+      if (isNaN(d[0]) || isNaN(d[1]) || isNaN(d[2])) {
+        debugger;
+      }
+
       const s = support(vec3.create(), vec3.fromValues(-d[0], -d[1], -d[2]));
-      if (vec3.dot(s, d) <= vec3.dot(d, d)) {
+      // if (vec3.dot(s, d) <= vec3.dot(d, d)) {
+      //   return vec3.distance(o, d);
+      // }
+
+      if (
+        vec3.dist(s, d) <= 0.01 ||
+        Array.from(simplex).some(e => vec3.equals(s, e))
+      ) {
         return vec3.distance(o, d);
       }
 
       simplex.add(s);
     }
+
     return vec3.distance(o, d);
   };
 }

@@ -1,5 +1,7 @@
-import { vec3 } from 'gl-matrix';
+import { vec3, glMatrix } from 'gl-matrix';
 import { Mesh } from './graphics';
+
+Object.assign(glMatrix, { EPSILON: 1.0e-2 });
 
 const SECONDARY = [0.25, 0.25, 0.25];
 
@@ -119,28 +121,23 @@ export const createSegment = (p0: vec3, p1: vec3): Mesh => ({
 
 export const getPositions = (mesh: Mesh): vec3[] => {
   const sem = mesh.vertexFormat.find(f => f.semantics === 'position');
-  const iset = new Set<number>();
-  const pos: vec3[] = [];
+  const points: vec3[] = [];
 
   for (let i of Array.from(mesh.indexData)) {
-    if (iset.has(i)) {
+    const offset = sem.offset / Float32Array.BYTES_PER_ELEMENT;
+    const stride = sem.stride / Float32Array.BYTES_PER_ELEMENT;
+    const v = vec3.fromValues(
+      mesh.vertexData[offset + stride * i],
+      mesh.vertexData[offset + stride * i + 1],
+      mesh.vertexData[offset + stride * i + 2]
+    );
+
+    if (points.some(e => vec3.equals(e, v))) {
       continue;
     }
-    iset.add(i);
-    pos.push(
-      vec3.fromValues(
-        mesh.vertexData[
-          sem.offset / Float32Array.BYTES_PER_ELEMENT + sem.size * i
-        ],
-        mesh.vertexData[
-          sem.offset / Float32Array.BYTES_PER_ELEMENT + sem.size * i + 1
-        ],
-        mesh.vertexData[
-          sem.offset / Float32Array.BYTES_PER_ELEMENT + sem.size * i + 2
-        ]
-      )
-    );
+
+    points.push(v);
   }
 
-  return pos;
+  return points;
 };

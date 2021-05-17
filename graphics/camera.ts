@@ -29,5 +29,16 @@ export class Camera extends Transform {
       this.near,
       this.far
     );
+
+    mat4.ortho(
+      this._projection,
+      -3.0,
+      3.0,
+      -2.0,
+      2.0,
+
+      -10,
+      10
+    );
   }
 }
