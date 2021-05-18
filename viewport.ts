@@ -50,6 +50,7 @@ const gridGeometry = renderer.createGeometry(
   createGrid(),
   WebGL2RenderingContext.LINES
 );
+const icoGeometry = renderer.createGeometry(meshes['ico']);
 
 const camera = new Camera(45.0, canvas.width / canvas.height, 0.25, 100.0);
 camera.position = [5.0, 5.0, 5.0];
@@ -103,7 +104,6 @@ fromEvent(document, 'keydown')
 
 const shape0 = new Polyhedra(getPositions(meshes['object1']));
 const shape1 = new Polyhedra(getPositions(meshes['object2']));
-console.log(shape0, shape1);
 
 // Loop
 const draw = () => {

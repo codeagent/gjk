@@ -30,15 +30,15 @@ export class Camera extends Transform {
       this.far
     );
 
-    mat4.ortho(
-      this._projection,
-      -3.0,
-      3.0,
-      -2.0,
-      2.0,
+    // mat4.ortho(
+    //   this._projection,
+    //   -3.0,
+    //   3.0,
+    //   -2.0,
+    //   2.0,
 
-      -10,
-      10
-    );
+    //   -10,
+    //   10
+    // );
   }
 }

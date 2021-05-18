@@ -318,7 +318,7 @@ export namespace gjk {
     const support = (out: vec3, dir: vec3) =>
       vec3.subtract(
         out,
-        mappable0.support(vec3.create(), transform0, dir),
+        mappable0.support(out, transform0, dir),
         mappable1.support(
           vec3.create(),
           transform1,
@@ -335,14 +335,11 @@ export namespace gjk {
     vec3.sub(d, o0, o1);
 
     const simplex = new Set<vec3>();
-    simplex.add(support(vec3.create(), d));
-
-    // vec3.negate(d, d);
-    // simplex.add(support(vec3.create(), d));
+    simplex.add(support(vec3.create(), vec3.fromValues(d[0], d[1], d[2])));
 
     const o = vec3.create();
-    let j = MAX_ITERATIONS;
 
+    let j = MAX_ITERATIONS;
     while (--j >= 0) {
       if (simplex.size === 1) {
         const p = Array.from(simplex.values());
@@ -371,8 +368,7 @@ export namespace gjk {
         const p = Array.from(simplex.values());
         const b = vec4.create();
         closestPointToTetrahedron(b, p[0], p[1], p[2], p[3], o);
-        if (b[0] < 0.0 || b[1] < 0.0 || b[2] < 0.0 || b[3] < 0.0) {
-          debugger;
+        if (b[0] < 0 || b[1] < 0 || b[2] < 0 || b[3] < 0) {
           return 0.0;
         }
         for (let i = 0; i < 4; i++) {
@@ -388,14 +384,9 @@ export namespace gjk {
       }
 
       const s = support(vec3.create(), vec3.fromValues(-d[0], -d[1], -d[2]));
-      // if (vec3.dot(s, d) <= vec3.dot(d, d)) {
-      //   return vec3.distance(o, d);
-      // }
 
-      if (
-        vec3.dist(s, d) <= 0.01 ||
-        Array.from(simplex).some(e => vec3.equals(s, e))
-      ) {
+      // no more extent in -d direction
+      if (Math.abs(vec3.dot(s, d) - vec3.dot(d, d)) < 1.0e-4) {
         return vec3.distance(o, d);
       }
 

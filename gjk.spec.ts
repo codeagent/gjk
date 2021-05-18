@@ -12,6 +12,25 @@ declare global {
 }
 
 describe('gjk', () => {
+  const createCombinations = (points: vec3[]) => {
+    const combinations = new Array<vec3[]>();
+
+    for (let i = 0; i < points.length - 1; i++) {
+      for (let j = i + 1; j < points.length; j++) {
+        const combination = Array.from(points);
+        combination[i] = points[j];
+        combination[j] = points[i];
+        combinations.push(combination);
+
+        const rev = Array.from(combination);
+        rev.reverse();
+        combinations.push(rev);
+      }
+    }
+
+    return combinations;
+  };
+
   beforeEach(function() {
     Object.assign(glMatrix, { EPSILON: 1.0e-2 });
 
@@ -28,21 +47,6 @@ describe('gjk', () => {
   });
 
   describe('closestPointToTetrahedron', () => {
-    const createCombinations = (points: vec3[]) => {
-      const combinations = new Array<vec3[]>();
-
-      for (let i = 0; i < points.length - 1; i++) {
-        for (let j = i + 1; j < points.length; j++) {
-          const combination = Array.from(points);
-          combination[i] = points[j];
-          combination[j] = points[i];
-          combinations.push(combination);
-        }
-      }
-
-      return combinations.concat();
-    };
-
     const barycentric = vec4.create();
 
     describe('should get closest points to all vertices', () => {
@@ -520,21 +524,6 @@ describe('gjk', () => {
   });
 
   describe('closestPointToTriangle', () => {
-    const createCombinations = (points: vec3[]) => {
-      const combinations = new Array<vec3[]>();
-
-      for (let i = 0; i < points.length - 1; i++) {
-        for (let j = i + 1; j < points.length; j++) {
-          const combination = Array.from(points);
-          combination[i] = points[j];
-          combination[j] = points[i];
-          combinations.push(combination);
-        }
-      }
-
-      return combinations.concat();
-    };
-
     const barycentric = vec3.create();
 
     describe('should get closest points to all vertices', () => {
@@ -747,21 +736,6 @@ describe('gjk', () => {
   });
 
   describe('closestPointToLineSegment', () => {
-    const createCombinations = (points: vec3[]) => {
-      const combinations = new Array<vec3[]>();
-
-      for (let i = 0; i < points.length - 1; i++) {
-        for (let j = i + 1; j < points.length; j++) {
-          const combination = Array.from(points);
-          combination[i] = points[j];
-          combination[j] = points[i];
-          combinations.push(combination);
-        }
-      }
-
-      return combinations.concat();
-    };
-
     const barycentric = vec2.create();
 
     it('should get closest point at begin', () => {
