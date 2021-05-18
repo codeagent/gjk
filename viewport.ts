@@ -87,6 +87,30 @@ const drawables = [
     },
     geometry: object1,
     transform: new Transform(vec3.fromValues(2.0, 0.0, 0.0))
+  },
+
+  // closests
+  {
+    material: {
+      shader: phongShader,
+      uniforms: {
+        albedo: vec4.fromValues(1.0, 0.2, 1.0, 1.0)
+      },
+      state: { cullFace: false }
+    },
+    geometry: icoGeometry,
+    transform: new Transform(vec3.fromValues(0.0, 0.0, 0.0))
+  },
+  {
+    material: {
+      shader: phongShader,
+      uniforms: {
+        albedo: vec4.fromValues(1.0, 0.2, 1.0, 1.0)
+      },
+      state: { cullFace: false }
+    },
+    geometry: icoGeometry,
+    transform: new Transform(vec3.fromValues(0.0, 0.0, 0.0))
   }
 ];
 
@@ -128,12 +152,21 @@ const draw = () => {
   axes1.update(pixes);
 
   //
-  const distance = gjk.distance(
+  const closestPoints: [vec3, vec3] = [vec3.create(), vec3.create()];
+  const distance = gjk.closestPoints(
     shape0,
     axes0.targetTransform.transform,
     shape1,
-    axes1.targetTransform.transform
+    axes1.targetTransform.transform,
+    closestPoints
   );
+
+  if (distance) {
+    drawables[3].transform.position = closestPoints[0];
+    drawables[4].transform.position = closestPoints[1];
+  } else {
+    drawables[3].transform.position = drawables[4].transform.position = vec3.create();
+  }
 
   document.getElementById('distance').innerHTML = `${distance}`;
 

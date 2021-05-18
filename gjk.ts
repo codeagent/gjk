@@ -307,24 +307,31 @@ export namespace gjk {
     return vec2.set(out, 1.0 - t, t);
   };
 
-  export const distance = (
+  interface SupportPoint {
+    diff: vec3; // support0 - support1
+    support0: vec3;
+    support1: vec3;
+  }
+
+  export const closestPoints = (
     mappable0: ISupportMappable,
     transform0: mat4,
     mappable1: ISupportMappable,
-    transform1: mat4
+    transform1: mat4,
+    closests: [vec3, vec3],
+    epsilon = 1.0e-6,
+    maxIterations = 50
   ): number => {
-    const MAX_ITERATIONS = 50;
-
-    const support = (out: vec3, dir: vec3) =>
-      vec3.subtract(
-        out,
-        mappable0.support(out, transform0, dir),
-        mappable1.support(
-          vec3.create(),
-          transform1,
-          vec3.fromValues(-dir[0], -dir[1], -dir[2])
-        )
+    const support = (dir: vec3) => {
+      const support0 = mappable0.support(vec3.create(), transform0, dir);
+      const support1 = mappable1.support(
+        vec3.create(),
+        transform1,
+        vec3.fromValues(-dir[0], -dir[1], -dir[2])
       );
+      const diff = vec3.subtract(vec3.create(), support0, support1);
+      return { support0, support1, diff };
+    };
 
     const o0 = vec3.create();
     const o1 = vec3.create();
@@ -334,40 +341,47 @@ export namespace gjk {
     const d = vec3.create();
     vec3.sub(d, o0, o1);
 
-    const simplex = new Set<vec3>();
-    simplex.add(support(vec3.create(), vec3.fromValues(d[0], d[1], d[2])));
+    const simplex = new Set<SupportPoint>();
+    simplex.add(support(vec3.fromValues(d[0], d[1], d[2])));
 
     const o = vec3.create();
 
-    let j = MAX_ITERATIONS;
+    let j = maxIterations;
     while (--j >= 0) {
       if (simplex.size === 1) {
         const p = Array.from(simplex.values());
-        vec3.copy(d, p[0]);
+        vec3.copy(d, p[0].diff);
       } else if (simplex.size === 2) {
         const p = Array.from(simplex.values());
         const b = vec2.create();
-        closestPointToLineSegment(b, p[0], p[1], o);
+        closestPointToLineSegment(b, p[0].diff, p[1].diff, o);
         for (let i = 0; i < 2; i++) {
           if (b[i] === 0) {
             simplex.delete(p[i]);
           }
         }
-        fromBarycentric(d, p, b);
+        fromBarycentric(d, [p[0].diff, p[1].diff], b);
       } else if (simplex.size === 3) {
         const p = Array.from(simplex.values());
         const b = vec3.create();
-        closestPointToTriangle(b, p[0], p[1], p[2], o);
+        closestPointToTriangle(b, p[0].diff, p[1].diff, p[2].diff, o);
         for (let i = 0; i < 3; i++) {
           if (b[i] === 0) {
             simplex.delete(p[i]);
           }
         }
-        fromBarycentric(d, p, b);
+        fromBarycentric(d, [p[0].diff, p[1].diff, p[2].diff], b);
       } else {
         const p = Array.from(simplex.values());
         const b = vec4.create();
-        closestPointToTetrahedron(b, p[0], p[1], p[2], p[3], o);
+        closestPointToTetrahedron(
+          b,
+          p[0].diff,
+          p[1].diff,
+          p[2].diff,
+          p[3].diff,
+          o
+        );
         if (b[0] < 0 || b[1] < 0 || b[2] < 0 || b[3] < 0) {
           return 0.0;
         }
@@ -376,17 +390,45 @@ export namespace gjk {
             simplex.delete(p[i]);
           }
         }
-        fromBarycentric(d, p, b);
+        fromBarycentric(d, [p[0].diff, p[1].diff, p[2].diff, p[3].diff], b);
       }
 
       if (isNaN(d[0]) || isNaN(d[1]) || isNaN(d[2])) {
         debugger;
       }
 
-      const s = support(vec3.create(), vec3.fromValues(-d[0], -d[1], -d[2]));
+      const s = support(vec3.fromValues(-d[0], -d[1], -d[2]));
 
       // no more extent in -d direction
-      if (Math.abs(vec3.dot(s, d) - vec3.dot(d, d)) < 1.0e-4) {
+      if (Math.abs(vec3.dot(s.diff, d) - vec3.dot(d, d)) < epsilon) {
+        if (simplex.size === 1) {
+          const p = Array.from(simplex.values());
+          closests[0] = p[0].support0;
+          closests[1] = p[0].support1;
+        } else if (simplex.size == 2) {
+          const p = Array.from(simplex.values());
+          const b = vec2.create();
+          closestPointToLineSegment(b, p[0].diff, p[1].diff, o);
+          fromBarycentric(closests[0], [p[0].support0, p[1].support0], b);
+          fromBarycentric(closests[1], [p[0].support1, p[1].support1], b);
+        } else if (simplex.size === 3) {
+          const p = Array.from(simplex.values());
+          const b = vec3.create();
+          closestPointToTriangle(b, p[0].diff, p[1].diff, p[2].diff, o);
+          fromBarycentric(
+            closests[0],
+            [p[0].support0, p[1].support0, p[2].support0],
+            b
+          );
+          fromBarycentric(
+            closests[1],
+            [p[0].support1, p[1].support1, p[2].support1],
+            b
+          );
+        } else {
+          debugger;
+        }
+
         return vec3.distance(o, d);
       }
 
