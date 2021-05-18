@@ -23,6 +23,11 @@ export class Polyhedra implements ISupportMappable {
       }
     }
 
+
+if(!isFinite(maxDot)) {
+  debugger;
+}
+
     return vec3.transformMat4(out, out, transform);
   }
 }
@@ -48,7 +53,8 @@ export class Box implements ISupportMappable {
     mat3.transpose(t, t);
     vec3.transformMat3(out, dir, t);
 
-    const s = vec3.fromValues(
+    vec3.set(
+      out,
       Math.sign(out[0]) * this.extents[0],
       Math.sign(out[1]) * this.extents[1],
       Math.sign(out[2]) * this.extents[2]

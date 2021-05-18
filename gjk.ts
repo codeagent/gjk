@@ -139,10 +139,10 @@ export namespace gjk {
 
     // find closest point on abc
     if (
-      vec3.dot(nAbc, ap) * vec3.dot(nAbc, ad) < 0 &&
-      apOabXnAbc < 0 &&
-      apOnAbcXac < 0 &&
-      bpObcXnAbc < 0
+      vec3.dot(nAbc, ap) * vec3.dot(nAbc, ad) <= 0 &&
+      apOabXnAbc <= 0 &&
+      apOnAbcXac <= 0 &&
+      bpObcXnAbc <= 0
     ) {
       let u = Math.abs(mixed(nAbc, bp, cp));
       let v = Math.abs(mixed(nAbc, cp, ap));
@@ -156,10 +156,10 @@ export namespace gjk {
 
     // find closest point on acd
     if (
-      vec3.dot(nAcd, ap) * vec3.dot(nAcd, ab) < 0.0 &&
-      apOacXnAcd < 0 &&
-      apOnAcdXad < 0 &&
-      cpOcdXnAcd < 0
+      vec3.dot(nAcd, ap) * vec3.dot(nAcd, ab) <= 0.0 &&
+      apOacXnAcd <= 0 &&
+      apOnAcdXad <= 0 &&
+      cpOcdXnAcd <= 0
     ) {
       let u = Math.abs(mixed(nAcd, cp, dp));
       let v = Math.abs(mixed(nAcd, dp, ap));
@@ -173,10 +173,10 @@ export namespace gjk {
 
     // find closest point on adb
     if (
-      vec3.dot(nAbd, ap) * vec3.dot(nAbd, ac) < 0.0 &&
-      apOnAbdXab < 0 &&
-      apOadXnAbd < 0 &&
-      bpOnAbdXbd < 0
+      vec3.dot(nAbd, ap) * vec3.dot(nAbd, ac) <= 0.0 &&
+      apOnAbdXab <= 0 &&
+      apOadXnAbd <= 0 &&
+      bpOnAbdXbd <= 0
     ) {
       let u = Math.abs(mixed(nAbd, dp, bp));
       let v = Math.abs(mixed(nAbd, bp, ap));
@@ -190,10 +190,10 @@ export namespace gjk {
 
     // find closest point on cbd
     if (
-      vec3.dot(nBcd, cp) * vec3.dot(nBcd, ab) > 0.0 &&
-      bpOnBcdXbc < 0 &&
-      cpOnBcdXcd < 0 &&
-      bpObdXnBcd < 0
+      vec3.dot(nBcd, cp) * vec3.dot(nBcd, ab) >= 0.0 &&
+      bpOnBcdXbc <= 0 &&
+      cpOnBcdXcd <= 0 &&
+      bpObdXnBcd <= 0
     ) {
       let u = Math.abs(mixed(nBcd, bp, dp));
       let v = Math.abs(mixed(nBcd, dp, cp));
@@ -319,11 +319,15 @@ export namespace gjk {
     mappable1: ISupportMappable,
     transform1: mat4,
     closests: [vec3, vec3],
-    epsilon = 1.0e-6,
+    epsilon = 1.0e-4,
     maxIterations = 50
   ): number => {
     const support = (dir: vec3) => {
-      const support0 = mappable0.support(vec3.create(), transform0, dir);
+      const support0 = mappable0.support(
+        vec3.create(),
+        transform0,
+        vec3.fromValues(dir[0], dir[1], dir[2])
+      );
       const support1 = mappable1.support(
         vec3.create(),
         transform1,
@@ -347,6 +351,7 @@ export namespace gjk {
     const o = vec3.create();
 
     let j = maxIterations;
+    // console.clear();
     while (--j >= 0) {
       if (simplex.size === 1) {
         const p = Array.from(simplex.values());
@@ -400,7 +405,10 @@ export namespace gjk {
       const s = support(vec3.fromValues(-d[0], -d[1], -d[2]));
 
       // no more extent in -d direction
+      // console.log(vec3.dot(d, d) - vec3.dot(s.diff, d));
       if (Math.abs(vec3.dot(s.diff, d) - vec3.dot(d, d)) < epsilon) {
+        // if (vec3.dot(d, d) - vec3.dot(s.diff, d) < epsilon) {
+        console.log(simplex.size, j);
         if (simplex.size === 1) {
           const p = Array.from(simplex.values());
           closests[0] = p[0].support0;

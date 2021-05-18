@@ -30,7 +30,7 @@ import {
   createTriangle,
   getPositions
 } from './mesh';
-import { Polyhedra } from './shape';
+import { Box, Polyhedra, Sphere } from './shape';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 
@@ -43,14 +43,14 @@ const phongShader = renderer.createShader(phongVertex, phongFragment);
 const flatShader = renderer.createShader(flatVertex, flatFragment);
 const meshes = loadObj(objects);
 
-const object0 = renderer.createGeometry(meshes['object1']);
-const object1 = renderer.createGeometry(meshes['object2']);
+const object0 = renderer.createGeometry(meshes['box']);
+const object1 = renderer.createGeometry(meshes['box']);
 
 const gridGeometry = renderer.createGeometry(
   createGrid(),
   WebGL2RenderingContext.LINES
 );
-const icoGeometry = renderer.createGeometry(meshes['ico']);
+const icoGeometry = renderer.createGeometry(meshes['sphere']);
 
 const camera = new Camera(45.0, canvas.width / canvas.height, 0.25, 100.0);
 camera.position = [5.0, 5.0, 5.0];
@@ -86,7 +86,7 @@ const drawables = [
       state: { cullFace: false }
     },
     geometry: object1,
-    transform: new Transform(vec3.fromValues(2.0, 0.0, 0.0))
+    transform: new Transform(vec3.fromValues(2.0, 2.0, -2.0))
   },
 
   // closests
@@ -99,7 +99,10 @@ const drawables = [
       state: { cullFace: false }
     },
     geometry: icoGeometry,
-    transform: new Transform(vec3.fromValues(0.0, 0.0, 0.0))
+    transform: new Transform(
+      vec3.fromValues(0.0, 0.0, 0.0),
+      vec3.fromValues(0.1, 0.1, 0.1)
+    )
   },
   {
     material: {
@@ -110,7 +113,10 @@ const drawables = [
       state: { cullFace: false }
     },
     geometry: icoGeometry,
-    transform: new Transform(vec3.fromValues(0.0, 0.0, 0.0))
+    transform: new Transform(
+      vec3.fromValues(0.0, 0.0, 0.0),
+      vec3.fromValues(0.1, 0.1, 0.1)
+    )
   }
 ];
 
@@ -126,8 +132,25 @@ fromEvent(document, 'keydown')
   )
   .subscribe(mode => (axes0.mode = axes1.mode = mode));
 
-const shape0 = new Polyhedra(getPositions(meshes['object1']));
-const shape1 = new Polyhedra(getPositions(meshes['object2']));
+const shape0 = new Polyhedra(getPositions(meshes['box']));
+const shape1 = new Polyhedra(getPositions(meshes['box']));
+
+// const shape0 = new Box(vec3.fromValues(0.5, 0.5, 0.5));
+// const shape1 = new Box(vec3.fromValues(0.5, 0.5, 0.5));
+
+// for (let p of shape1.hull) {
+//   drawables.push({
+//     material: {
+//       shader: phongShader,
+//       uniforms: {
+//         albedo: vec4.fromValues(1.0, 1.0, 1.0, 1.0)
+//       },
+//       state: { cullFace: false }
+//     },
+//     geometry: icoGeometry,
+//     transform: new Transform(p)
+//   });
+// }
 
 // Loop
 const draw = () => {

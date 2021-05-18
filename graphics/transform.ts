@@ -7,7 +7,12 @@ export class Transform {
   }
 
   get rotation() {
-    return this._rotation;
+    return quat.fromValues(
+      this._rotation[0],
+      this._rotation[1],
+      this._rotation[2],
+      this._rotation[3]
+    );
   }
 
   set position(position: vec3) {
@@ -16,7 +21,11 @@ export class Transform {
   }
 
   get position() {
-    return this._position;
+    return vec3.fromValues(
+      this._position[0],
+      this._position[1],
+      this._position[2]
+    );
   }
 
   set scale(scale: vec3) {
@@ -25,7 +34,7 @@ export class Transform {
   }
 
   get scale() {
-    return this._scale;
+    return vec3.fromValues(this._scale[0], this._scale[1], this._scale[2]);
   }
 
   get forward(): vec3 {
@@ -65,7 +74,7 @@ export class Transform {
   lookAt(eye: vec3, at: vec3) {
     const view = mat4.clone(this._transform);
     mat4.targetTo(view, eye, at, [0.0, 1.0, 0.0]);
-    mat4.getTranslation(this.position, view);
-    mat4.getRotation(this.rotation, view);
+    mat4.getTranslation(this._position, view);
+    mat4.getRotation(this._rotation, view);
   }
 }
