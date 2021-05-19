@@ -1,5 +1,9 @@
 import { mat3, mat4, vec3 } from 'gl-matrix';
 
+/**
+ * http://www.dtecta.com/papers/jgt98convex.pdf
+ */
+
 interface ISupportMappable {
   support(out: vec3, transform: mat4, dir: vec3): vec3;
 }
@@ -23,10 +27,9 @@ export class Polyhedra implements ISupportMappable {
       }
     }
 
-
-if(!isFinite(maxDot)) {
-  debugger;
-}
+    if (!isFinite(maxDot)) {
+      debugger;
+    }
 
     return vec3.transformMat4(out, out, transform);
   }
@@ -65,19 +68,53 @@ export class Box implements ISupportMappable {
 }
 
 export class Cone implements ISupportMappable {
-  constructor(public readonly extents: vec3) {}
+  constructor(public readonly height: number, public readonly radius: number) {}
 
   support(out: vec3, transform: mat4, dir: vec3): vec3 {
-    // @todo:
-    return vec3.create();
+    const t = mat3.fromMat4(mat3.create(), transform);
+    mat3.transpose(t, t);
+    vec3.transformMat3(out, dir, t);
+
+    const sinA =
+      this.radius /
+      Math.sqrt(this.radius * this.radius + this.height * this.height);
+    const sigma = Math.sqrt(out[0] * out[0] + out[2] * out[2]);
+
+    if (out[1] > vec3.len(out) * sinA) {
+      vec3.set(out, 0.0, this.height * 0.5, 0.0);
+    } else if (sigma > 0.0) {
+      const fr = this.radius / sigma;
+      vec3.set(out, fr * out[0], -this.height * 0.5, fr * out[2]);
+    } else {
+      vec3.set(out, 0.0, -this.height * 0.5, 0.0);
+    }
+
+    return vec3.transformMat4(out, out, transform);
   }
 }
 
 export class Cylinder implements ISupportMappable {
-  constructor(public readonly extents: vec3) {}
+  constructor(public readonly height: number, public readonly radius: number) {}
 
   support(out: vec3, transform: mat4, dir: vec3): vec3 {
-    // @todo:
-    return vec3.create();
+    const t = mat3.fromMat4(mat3.create(), transform);
+    mat3.transpose(t, t);
+    vec3.transformMat3(out, dir, t);
+
+    const sigma = Math.sqrt(out[0] * out[0] + out[2] * out[2]);
+
+    if (sigma > 0.0) {
+      const fr = this.radius / sigma;
+      vec3.set(
+        out,
+        fr * out[0],
+        Math.sign(dir[1]) * this.height * 0.5,
+        fr * out[2]
+      );
+    } else {
+      vec3.set(out, 0.0, Math.sign(dir[1]) * this.height * 0.5, 0.0);
+    }
+
+    return vec3.transformMat4(out, out, transform);
   }
 }

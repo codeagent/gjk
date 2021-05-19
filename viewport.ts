@@ -30,7 +30,7 @@ import {
   createTriangle,
   getPositions
 } from './mesh';
-import { Box, Polyhedra, Sphere } from './shape';
+import { Box, Cone, Cylinder, Polyhedra, Sphere } from './shape';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 
@@ -43,8 +43,8 @@ const phongShader = renderer.createShader(phongVertex, phongFragment);
 const flatShader = renderer.createShader(flatVertex, flatFragment);
 const meshes = loadObj(objects);
 
-const object0 = renderer.createGeometry(meshes['box']);
-const object1 = renderer.createGeometry(meshes['box']);
+const object0 = renderer.createGeometry(meshes['cylinder']);
+const object1 = renderer.createGeometry(meshes['cylinder']);
 
 const gridGeometry = renderer.createGeometry(
   createGrid(),
@@ -132,11 +132,12 @@ fromEvent(document, 'keydown')
   )
   .subscribe(mode => (axes0.mode = axes1.mode = mode));
 
-const shape0 = new Polyhedra(getPositions(meshes['box']));
-const shape1 = new Polyhedra(getPositions(meshes['box']));
+// const shape0 = new Polyhedra(getPositions(meshes['box']));
+// const shape1 = new Polyhedra(getPositions(meshes['box']));
 
 // const shape0 = new Box(vec3.fromValues(0.5, 0.5, 0.5));
-// const shape1 = new Box(vec3.fromValues(0.5, 0.5, 0.5));
+const shape0 = new Cylinder(2.0, 1.0);
+const shape1 = new Cylinder(2.0, 1.0);
 
 // for (let p of shape1.hull) {
 //   drawables.push({
