@@ -351,7 +351,7 @@ export namespace gjk {
     const o = vec3.create();
 
     let j = maxIterations;
-    // console.clear();
+
     while (--j >= 0) {
       if (simplex.size === 1) {
         const p = Array.from(simplex.values());
@@ -405,10 +405,7 @@ export namespace gjk {
       const s = support(vec3.fromValues(-d[0], -d[1], -d[2]));
 
       // no more extent in -d direction
-      // console.log(vec3.dot(d, d) - vec3.dot(s.diff, d));
       if (Math.abs(vec3.dot(s.diff, d) - vec3.dot(d, d)) < epsilon) {
-        // if (vec3.dot(d, d) - vec3.dot(s.diff, d) < epsilon) {
-        // console.log(simplex.size, j);
         if (simplex.size === 1) {
           const p = Array.from(simplex.values());
           closests[0] = p[0].support0;

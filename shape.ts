@@ -17,9 +17,9 @@ export class Polyhedra implements ISupportMappable {
     const v = vec3.transformMat3(vec3.create(), dir, t);
 
     let maxDot = Number.NEGATIVE_INFINITY;
-    vec3.copy(out, this.hull[0]);
+    vec3.copy(out, this.hull[1]);
 
-    for (let i = 1; i < this.hull.length; i++) {
+    for (let i = 0; i < this.hull.length; i++) {
       const dot = vec3.dot(v, this.hull[i]);
       if (dot > maxDot) {
         maxDot = dot;
