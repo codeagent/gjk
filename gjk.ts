@@ -408,7 +408,7 @@ export namespace gjk {
       // console.log(vec3.dot(d, d) - vec3.dot(s.diff, d));
       if (Math.abs(vec3.dot(s.diff, d) - vec3.dot(d, d)) < epsilon) {
         // if (vec3.dot(d, d) - vec3.dot(s.diff, d) < epsilon) {
-        console.log(simplex.size, j);
+        // console.log(simplex.size, j);
         if (simplex.size === 1) {
           const p = Array.from(simplex.values());
           closests[0] = p[0].support0;

@@ -108,11 +108,11 @@ export class Cylinder implements ISupportMappable {
       vec3.set(
         out,
         fr * out[0],
-        Math.sign(dir[1]) * this.height * 0.5,
+        Math.sign(out[1]) * this.height * 0.5,
         fr * out[2]
       );
     } else {
-      vec3.set(out, 0.0, Math.sign(dir[1]) * this.height * 0.5, 0.0);
+      vec3.set(out, 0.0, Math.sign(out[1]) * this.height * 0.5, 0.0);
     }
 
     return vec3.transformMat4(out, out, transform);

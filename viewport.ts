@@ -86,7 +86,7 @@ const drawables = [
       state: { cullFace: false }
     },
     geometry: object1,
-    transform: new Transform(vec3.fromValues(2.0, 2.0, -2.0))
+    transform: new Transform(vec3.fromValues(0.0, 2.0, -2.0))
   },
 
   // closests
@@ -132,10 +132,11 @@ fromEvent(document, 'keydown')
   )
   .subscribe(mode => (axes0.mode = axes1.mode = mode));
 
-// const shape0 = new Polyhedra(getPositions(meshes['box']));
-// const shape1 = new Polyhedra(getPositions(meshes['box']));
+// const shape0 = new Polyhedra(getPositions(meshes['cone']));
+// const shape1 = new Polyhedra(getPositions(meshes['cone']));
 
 // const shape0 = new Box(vec3.fromValues(0.5, 0.5, 0.5));
+// const shape1 = new Box(vec3.fromValues(0.5, 0.5, 0.5));
 const shape0 = new Cylinder(2.0, 1.0);
 const shape1 = new Cylinder(2.0, 1.0);
 
