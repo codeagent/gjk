@@ -1,4 +1,4 @@
-import { mat4, vec2, vec3, vec4 } from 'gl-matrix';
+import { vec2, vec3, vec4 } from 'gl-matrix';
 
 export namespace gjk {
   /**
@@ -23,8 +23,9 @@ export namespace gjk {
     return out;
   };
 
-  export interface ISupportMappable {
-    support(out: vec3, transform: mat4, dir: vec3): vec3;
+  export interface ShapeInterface {
+    support(out: vec3, dir: vec3): vec3;
+    origin: vec3;
   }
 
   /**
@@ -307,43 +308,36 @@ export namespace gjk {
     return vec2.set(out, 1.0 - t, t);
   };
 
-  interface SupportPoint {
+  export interface SupportPoint {
     diff: vec3; // support0 - support1
     support0: vec3;
     support1: vec3;
   }
 
+  export type Simplex<T> = Set<T>;
+
   export const closestPoints = (
-    mappable0: ISupportMappable,
-    transform0: mat4,
-    mappable1: ISupportMappable,
-    transform1: mat4,
+    shape0: ShapeInterface,
+    shape1: ShapeInterface,
     closests: [vec3, vec3],
     epsilon = 1.0e-4,
-    maxIterations = 50
+    maxIterations = 25
   ): number => {
     const support = (dir: vec3) => {
-      const support0 = mappable0.support(
+      const support0 = shape0.support(
         vec3.create(),
-        transform0,
         vec3.fromValues(dir[0], dir[1], dir[2])
       );
-      const support1 = mappable1.support(
+      const support1 = shape1.support(
         vec3.create(),
-        transform1,
         vec3.fromValues(-dir[0], -dir[1], -dir[2])
       );
       const diff = vec3.subtract(vec3.create(), support0, support1);
       return { support0, support1, diff };
     };
 
-    const o0 = vec3.create();
-    const o1 = vec3.create();
-    vec3.transformMat4(o0, o0, transform0);
-    vec3.transformMat4(o1, o1, transform1);
-
     const d = vec3.create();
-    vec3.sub(d, o0, o1);
+    vec3.sub(d, shape0.origin, shape1.origin);
 
     const simplex = new Set<SupportPoint>();
     simplex.add(support(vec3.fromValues(d[0], d[1], d[2])));

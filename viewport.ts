@@ -132,27 +132,22 @@ fromEvent(document, 'keydown')
   )
   .subscribe(mode => (axes0.mode = axes1.mode = mode));
 
-const shape0 = new Polyhedra(getPositions(meshes['cylinder']));
-const shape1 = new Polyhedra(getPositions(meshes['cone']));
-
-// const shape0 = new Box(vec3.fromValues(0.5, 0.5, 0.5));
-// const shape1 = new Box(vec3.fromValues(0.5, 0.5, 0.5));
-// const shape0 = new Cylinder(2.0, 1.0);
-// const shape1 = new Cylinder(2.0, 1.0);
-
-// for (let p of shape1.hull) {
-//   drawables.push({
-//     material: {
-//       shader: phongShader,
-//       uniforms: {
-//         albedo: vec4.fromValues(1.0, 1.0, 1.0, 1.0)
-//       },
-//       state: { cullFace: false }
-//     },
-//     geometry: icoGeometry,
-//     transform: new Transform(p)
-//   });
-// }
+const shape0 = new Polyhedra(
+  getPositions(meshes['cylinder']),
+  axes0.targetTransform
+);
+const shape1 = new Polyhedra(
+  getPositions(meshes['cone']),
+  axes1.targetTransform
+);
+// const shape0 = new Box(vec3.fromValues(0.5, 0.5, 0.5), axes0.targetTransform);
+// const shape1 = new Box(vec3.fromValues(0.5, 0.5, 0.5), axes1.targetTransform);
+// const shape0 = new Cylinder(2.0, 1.0, axes0.targetTransform);
+// const shape1 = new Cylinder(2.0, 1.0, axes1.targetTransform);
+// const shape0 = new Cone(2.0, 1.0, axes0.targetTransform);
+// const shape1 = new Cone(2.0, 1.0, axes1.targetTransform);
+// const shape0 = new Sphere(1.0, axes0.targetTransform);
+// const shape1 = new Sphere(1.0, axes1.targetTransform);
 
 // Loop
 const draw = () => {
@@ -178,13 +173,7 @@ const draw = () => {
 
   //
   const closestPoints: [vec3, vec3] = [vec3.create(), vec3.create()];
-  const distance = gjk.closestPoints(
-    shape0,
-    axes0.targetTransform.transform,
-    shape1,
-    axes1.targetTransform.transform,
-    closestPoints
-  );
+  const distance = gjk.closestPoints(shape0, shape1, closestPoints);
 
   if (distance) {
     drawables[3].transform.position = closestPoints[0];
