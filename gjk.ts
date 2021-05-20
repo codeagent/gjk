@@ -206,7 +206,7 @@ export namespace gjk {
       return vec4.set(out, 0.0, v, u, w);
     }
 
-    // we are in tetrahedron itself, return point
+    // we are in tetrahedron itself, return 'special' indication
     return vec4.set(out, -1.0, -1.0, -1.0, -1.0);
   };
 
@@ -435,5 +435,96 @@ export namespace gjk {
     }
 
     return vec3.distance(o, d);
+  };
+
+  export const areIntersect = (
+    shape0: ShapeInterface,
+    shape1: ShapeInterface,
+    simplex: Simplex<SupportPoint>,
+    epsilon = 1.0e-4,
+    maxIterations = 25
+  ): boolean => {
+    const support = (dir: vec3) => {
+      const support0 = shape0.support(
+        vec3.create(),
+        vec3.fromValues(dir[0], dir[1], dir[2])
+      );
+      const support1 = shape1.support(
+        vec3.create(),
+        vec3.fromValues(-dir[0], -dir[1], -dir[2])
+      );
+      const diff = vec3.subtract(vec3.create(), support0, support1);
+      return { support0, support1, diff };
+    };
+
+    const o = vec3.create();
+    const d = vec3.create();
+    vec3.sub(d, shape0.origin, shape1.origin);
+
+    simplex.add(support(vec3.fromValues(d[0], d[1], d[2])));
+
+    let j = maxIterations;
+
+    while (--j >= 0) {
+      if (simplex.size === 1) {
+        const p = Array.from(simplex.values());
+        vec3.copy(d, p[0].diff);
+      } else if (simplex.size === 2) {
+        const p = Array.from(simplex.values());
+        const b = vec2.create();
+        closestPointToLineSegment(b, p[0].diff, p[1].diff, o);
+        for (let i = 0; i < 2; i++) {
+          if (b[i] === 0) {
+            simplex.delete(p[i]);
+          }
+        }
+        fromBarycentric(d, [p[0].diff, p[1].diff], b);
+      } else if (simplex.size === 3) {
+        const p = Array.from(simplex.values());
+        const b = vec3.create();
+        closestPointToTriangle(b, p[0].diff, p[1].diff, p[2].diff, o);
+        for (let i = 0; i < 3; i++) {
+          if (b[i] === 0) {
+            simplex.delete(p[i]);
+          }
+        }
+        fromBarycentric(d, [p[0].diff, p[1].diff, p[2].diff], b);
+      } else {
+        const p = Array.from(simplex.values());
+        const b = vec4.create();
+        closestPointToTetrahedron(
+          b,
+          p[0].diff,
+          p[1].diff,
+          p[2].diff,
+          p[3].diff,
+          o
+        );
+        if (b[0] < 0 || b[1] < 0 || b[2] < 0 || b[3] < 0) {
+          return true;
+        }
+        for (let i = 0; i < 4; i++) {
+          if (b[i] === 0) {
+            simplex.delete(p[i]);
+          }
+        }
+        fromBarycentric(d, [p[0].diff, p[1].diff, p[2].diff, p[3].diff], b);
+      }
+
+      if (isNaN(d[0]) || isNaN(d[1]) || isNaN(d[2])) {
+        debugger;
+      }
+
+      const s = support(vec3.fromValues(-d[0], -d[1], -d[2]));
+
+      // no more extent in -d direction
+      if (Math.abs(vec3.dot(s.diff, d) - vec3.dot(d, d)) < epsilon) {
+        return false;
+      }
+
+      simplex.add(s);
+    }
+
+    return false;
   };
 }

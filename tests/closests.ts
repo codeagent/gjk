@@ -1,5 +1,3 @@
-import './style.css';
-
 import { fromEvent } from 'rxjs';
 import { map, filter } from 'rxjs/operators';
 import { vec3, vec4 } from 'gl-matrix';
@@ -11,26 +9,29 @@ import {
   loadObj,
   Renderer,
   Transform
-} from './graphics';
+} from '../graphics';
 
 import {
   vertex as phongVertex,
   fragment as phongFragment
-} from './shaders/phong';
+} from '../shaders/phong';
 
-import { vertex as flatVertex, fragment as flatFragment } from './shaders/flat';
+import {
+  vertex as flatVertex,
+  fragment as flatFragment
+} from '../shaders/flat';
 
-import objects from './objects/objects.obj';
+import objects from '../objects/objects.obj';
 
-import { AxesController } from './graphics/gizmos/axes-controller';
-import { gjk } from './gjk';
+import { AxesController } from '../graphics/gizmos/axes-controller';
+import { gjk } from '../gjk';
 import {
   createSegment,
   createTetra,
   createTriangle,
   getPositions
-} from './mesh';
-import { Box, Cone, Cylinder, Polyhedra, Sphere } from './shape';
+} from '../mesh';
+import { Box, Cone, Cylinder, Polyhedra, Sphere } from '../shape';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 
@@ -43,8 +44,8 @@ const phongShader = renderer.createShader(phongVertex, phongFragment);
 const flatShader = renderer.createShader(flatVertex, flatFragment);
 const meshes = loadObj(objects);
 
-const object0 = renderer.createGeometry(meshes['cylinder']);
-const object1 = renderer.createGeometry(meshes['cone']);
+const object0 = renderer.createGeometry(meshes['object1']);
+const object1 = renderer.createGeometry(meshes['object2']);
 
 const gridGeometry = renderer.createGeometry(
   createGrid(),
@@ -133,11 +134,11 @@ fromEvent(document, 'keydown')
   .subscribe(mode => (axes0.mode = axes1.mode = mode));
 
 const shape0 = new Polyhedra(
-  getPositions(meshes['cylinder']),
+  getPositions(meshes['object1']),
   axes0.targetTransform
 );
 const shape1 = new Polyhedra(
-  getPositions(meshes['cone']),
+  getPositions(meshes['object2']),
   axes1.targetTransform
 );
 // const shape0 = new Box(vec3.fromValues(0.5, 0.5, 0.5), axes0.targetTransform);
