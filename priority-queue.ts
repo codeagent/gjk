@@ -53,7 +53,6 @@ export class PriorityQueue<T extends object> implements Iterable<T> {
   }
 
   dequeue(): T {
-    
     if (this._length === 0) {
       return null;
     }
