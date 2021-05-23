@@ -1,5 +1,5 @@
 import './style.css';
 
-// import './jasmine';
+import './jasmine';
 // import './tests/intersection';
-import './tests/closests';
+// import './tests/closests';
