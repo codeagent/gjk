@@ -257,8 +257,29 @@ export namespace epa {
     f4.siblings = new WeakMap([[w2, f5], [w4, f3], [w1h, sf3]]);
     f5.siblings = new WeakMap([[w2, sf4], [w2h, f0], [w4, f4]]);
 
-    // @todo:
-    //sf0.siblings = new WeakMap([[w0, f1], [w4, f5], [w2h, sf5]]);
+    const s00 = s0.siblings.get(w0);
+    sf0.siblings = new WeakMap([[ws0, sf1], [w0h, f1], [w0, s00]]);
+    s00.siblings.set(ws0, sf0);
+
+    const s01 = s0.siblings.get(ws0);
+    sf1.siblings = new WeakMap([[ws0, s01], [w1, f2], [w0h, sf0]]);
+    s01.siblings.set(w1, sf1);
+
+    const s10 = s1.siblings.get(w1);
+    sf2.siblings = new WeakMap([[ws1, sf3], [w1h, f3], [w1, s10]]);
+    s01.siblings.set(ws1, sf2);
+
+    const s11 = s1.siblings.get(ws1);
+    sf3.siblings = new WeakMap([[ws1, s11], [w2, f4], [w1h, sf2]]);
+    s11.siblings.set(w2, sf3);
+
+    const s20 = s2.siblings.get(w2);
+    sf4.siblings = new WeakMap([[ws2, sf5], [w2h, f5], [w2, s20]]);
+    s20.siblings.set(ws2, sf4);
+
+    const s21 = s2.siblings.get(ws2);
+    sf5.siblings = new WeakMap([[ws2, s21], [w0, f0], [w2h, sf4]]);
+    s21.siblings.set(w0, sf5);
 
     // remove siblings
     polytop.remove(s0);
