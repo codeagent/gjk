@@ -4,30 +4,23 @@ import { gjk } from './gjk';
 import { PriorityQueue } from './priority-queue';
 
 export namespace epa {
-  interface Loop<T> {
-    v: T;
-    next: Loop<T>;
-  }
-
-  interface Face<T extends object> {
-    // vertices: Loop<T>; // v0 -> v1 -> v2 -> v0
+  export interface Face<T extends object> {
     vertices: T[];
     loop: WeakMap<T, T>; // v(i) -> v(i+1)
-    siblings: WeakMap<T, Face<T>>; // v0 -> face
+    siblings: WeakMap<T, Face<T>>; // v -> face
     distance: number;
   }
 
-  type Polytop<T extends object = vec3> = PriorityQueue<Face<T>>;
+  export type Polytop<T extends object = vec3> = PriorityQueue<Face<T>>;
 
-  const calcFaceDistance = (face: Face<vec3>): number => {
+  const calcFaceDistance = (face: Face<vec3>) => {
     const O = vec3.create();
     const a = vec3.create();
     const x = vec3.create();
     vec3.subtract(a, face.vertices[1], face.vertices[0]);
     vec3.subtract(x, face.vertices[1], face.vertices[0]);
     vec3.cross(x, a, x);
-    const length = vec3.length(x);
-    return Math.abs(vec3.dot(O, x)) / length;
+    face.distance = Math.abs(vec3.dot(O, x)) / vec3.length(x);
   };
 
   const makeLoop = <T extends object>(values: T[]): WeakMap<T, T> => {
@@ -44,7 +37,7 @@ export namespace epa {
     const w0 = vertices[0];
     const w1 = vertices[1];
     const w2 = vertices[2];
-    const w3 = vertices[2];
+    const w3 = vertices[3];
     const w1w0 = vec3.create();
     const w2w0 = vec3.create();
 

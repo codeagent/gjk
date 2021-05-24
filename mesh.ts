@@ -1,9 +1,11 @@
 import { vec3, glMatrix } from 'gl-matrix';
+import { epa } from './epa';
 import { Mesh } from './graphics';
 
 Object.assign(glMatrix, { EPSILON: 1.0e-2 });
 
 const SECONDARY = [0.25, 0.25, 0.25];
+const WHITE = [1.0, 1.0, 1.0];
 
 export const createTetra = (p0: vec3, p1: vec3, p2: vec3, p3: vec3): Mesh => ({
   vertexFormat: [
@@ -140,4 +142,42 @@ export const getPositions = (mesh: Mesh): vec3[] => {
   }
 
   return points;
+};
+
+export const createMeshFromPolytop = (polytop: epa.Polytop): Mesh => {
+  const vertexData = [];
+  const indexData = [];
+
+  for (let face of polytop) {
+    for (let i = 0; i < 3; i++) {
+      indexData.push(vertexData.length / 6);
+      vertexData.push(...face.vertices[i], ...WHITE);
+
+      indexData.push(vertexData.length / 6);
+      vertexData.push(...face.vertices[(i + 1) % 3], ...WHITE);
+    }
+  }
+
+  return {
+    vertexFormat: [
+      {
+        semantics: 'position',
+        size: 3,
+        type: WebGL2RenderingContext.FLOAT,
+        slot: 0,
+        offset: 0,
+        stride: 24
+      },
+      {
+        semantics: 'color',
+        size: 3,
+        type: WebGL2RenderingContext.FLOAT,
+        slot: 1,
+        offset: 12,
+        stride: 24
+      }
+    ],
+    vertexData: Float32Array.from(vertexData),
+    indexData: Uint16Array.from(indexData)
+  };
 };
