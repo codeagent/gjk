@@ -33,10 +33,10 @@ const gridGeometry = renderer.createGeometry(
 );
 
 const simplex = new Set<vec3>([
-  vec3.fromValues(1.0, 1.0, 1.0),
+  vec3.fromValues(-1.0, 1.0, 1.0),
   vec3.fromValues(1.0, 1.0, -1.0),
-  vec3.fromValues(-1.0, 1.0, -1.0),
-  vec3.fromValues(1.0, -1.0, 1.0)
+  vec3.fromValues(1.0, -1.0, 1.0),
+  vec3.fromValues(-1.0, -1.0, -1.0)
 ]);
 
 let polytop = epa.polytopFromSimplex(simplex);
@@ -68,9 +68,20 @@ const drawables = [
   }
 ];
 
-const shape = new Sphere(1.0, new Transform());
+const shape = new Sphere(Math.SQRT2 , new Transform());
 
-fromEvent(canvas, 'mousedown').subscribe();
+fromEvent(document, 'keydown')
+  .pipe(filter((e: KeyboardEvent) => ['s'].includes(e.key)))
+  .subscribe(() => {
+    epa.subdivide(polytop, shape);
+
+    renderer.destroyGeometry(drawables[1].geometry);
+    drawables[1].geometry = renderer.createGeometry(
+      createMeshFromPolytop(polytop),
+      WebGL2RenderingContext.LINES
+    );
+    console.log(Array.from(polytop));
+  });
 
 // Loop
 

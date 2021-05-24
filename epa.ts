@@ -1,4 +1,3 @@
-import value from '*.json';
 import { vec2, vec3 } from 'gl-matrix';
 import { gjk } from './gjk';
 import { PriorityQueue } from './priority-queue';
@@ -14,13 +13,12 @@ export namespace epa {
   export type Polytop<T extends object = vec3> = PriorityQueue<Face<T>>;
 
   const calcFaceDistance = (face: Face<vec3>) => {
-    const O = vec3.create();
     const a = vec3.create();
     const x = vec3.create();
     vec3.subtract(a, face.vertices[1], face.vertices[0]);
-    vec3.subtract(x, face.vertices[1], face.vertices[0]);
+    vec3.subtract(x, face.vertices[2], face.vertices[0]);
     vec3.cross(x, a, x);
-    face.distance = Math.abs(vec3.dot(O, x)) / vec3.length(x);
+    face.distance = Math.abs(vec3.dot(face.vertices[0], x)) / vec3.length(x);
   };
 
   const makeLoop = <T extends object>(values: T[]): WeakMap<T, T> => {
@@ -34,10 +32,10 @@ export namespace epa {
   export const polytopFromSimplex = (simplex: gjk.Simplex<vec3>): Polytop => {
     const vertices = Array.from(simplex);
 
-    const w0 = vertices[0];
-    const w1 = vertices[1];
-    const w2 = vertices[2];
-    const w3 = vertices[3];
+    let w0 = vertices[0];
+    let w1 = vertices[1];
+    let w2 = vertices[2];
+    let w3 = vertices[3];
     const w1w0 = vec3.create();
     const w2w0 = vec3.create();
 
@@ -48,14 +46,14 @@ export namespace epa {
     vec3.cross(x, w2w0, w1w0);
 
     const w3w0 = vec3.create();
-    vec3.subtract(w3w0, vertices[3], vertices[0]);
+    vec3.subtract(w3w0, w3, w0);
 
     // preserve ccw orientation: swap w1 and w2
     // @todo:??
     if (vec3.dot(w3w0, x) > 0.0) {
-      const tmp = vertices[2];
-      vertices[2] = vertices[1];
-      vertices[1] = tmp;
+      const tmp = w2;
+      w2 = w1;
+      w1 = tmp;
     }
 
     const face0: Face<vec3> = {
