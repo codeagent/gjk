@@ -16,6 +16,11 @@ import {
   fragment as flatFragment
 } from '../shaders/flat';
 
+import {
+  vertex as phongVertex,
+  fragment as phongFragment
+} from '../shaders/phong';
+
 import { Sphere } from '../shape';
 import { epa } from '../epa';
 import { createMeshFromPolytop } from '../mesh';
@@ -27,16 +32,17 @@ const renderer = new Renderer(
   })
 );
 const flatShader = renderer.createShader(flatVertex, flatFragment);
+const phongShader = renderer.createShader(phongVertex, phongFragment);
 const gridGeometry = renderer.createGeometry(
   createGrid(),
   WebGL2RenderingContext.LINES
 );
 
 const simplex = new Set<vec3>([
-  vec3.fromValues(-1.0, 1.0, 1.0),
-  vec3.fromValues(1.0, 1.0, -1.0),
-  vec3.fromValues(1.0, -1.0, 1.0),
-  vec3.fromValues(-1.0, -1.0, -1.0)
+  vec3.fromValues(-1.0 + 0.25, 1.0, 1.0),
+  vec3.fromValues(1.0 + 0.25, 1.0, -1.0),
+  vec3.fromValues(1.0 + 0.25, -1.0, 1.0),
+  vec3.fromValues(-1.0 + 0.25, -1.0, -1.0)
 ]);
 
 let polytop = epa.polytopFromSimplex(simplex);
@@ -56,19 +62,16 @@ const drawables = [
   },
   {
     material: {
-      shader: flatShader,
-      uniforms: { albedo: vec4.fromValues(0.0, 0.0, 0.0, 1.0) },
+      shader: phongShader,
+      uniforms: { albedo: vec4.fromValues(1.0, 0.0, 0.0, 1.0) },
       state: {}
     },
-    geometry: renderer.createGeometry(
-      createMeshFromPolytop(polytop),
-      WebGL2RenderingContext.LINES
-    ),
-    transform: new Transform()
+    geometry: renderer.createGeometry(createMeshFromPolytop(polytop, false)),
+    transform: new Transform(vec3.fromValues(0.25, 0.0, 0.0))
   }
 ];
 
-const shape = new Sphere(Math.SQRT2 , new Transform());
+const shape = new Sphere(Math.sqrt(3), new Transform(vec3.fromValues(0.25, 0.0, 0.0)));
 
 fromEvent(document, 'keydown')
   .pipe(filter((e: KeyboardEvent) => ['s'].includes(e.key)))
@@ -77,8 +80,7 @@ fromEvent(document, 'keydown')
 
     renderer.destroyGeometry(drawables[1].geometry);
     drawables[1].geometry = renderer.createGeometry(
-      createMeshFromPolytop(polytop),
-      WebGL2RenderingContext.LINES
+      createMeshFromPolytop(polytop, false)
     );
     console.log(Array.from(polytop));
   });

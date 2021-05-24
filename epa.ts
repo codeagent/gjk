@@ -1,4 +1,4 @@
-import { vec2, vec3 } from 'gl-matrix';
+import { glMatrix, vec2, vec3 } from 'gl-matrix';
 import { gjk } from './gjk';
 import { PriorityQueue } from './priority-queue';
 
@@ -18,7 +18,8 @@ export namespace epa {
     vec3.subtract(a, face.vertices[1], face.vertices[0]);
     vec3.subtract(x, face.vertices[2], face.vertices[0]);
     vec3.cross(x, a, x);
-    face.distance = Math.abs(vec3.dot(face.vertices[0], x)) / vec3.length(x);
+    const length = vec3.length(x);
+    face.distance = Math.abs(vec3.dot(face.vertices[0], x)) / length;
   };
 
   const makeLoop = <T extends object>(values: T[]): WeakMap<T, T> => {
@@ -258,7 +259,7 @@ export namespace epa {
 
     const s10 = s1.siblings.get(w1);
     sf2.siblings = new WeakMap([[ws1, sf3], [w1h, f3], [w1, s10]]);
-    s01.siblings.set(ws1, sf2);
+    s10.siblings.set(ws1, sf2);
 
     const s11 = s1.siblings.get(ws1);
     sf3.siblings = new WeakMap([[ws1, s11], [w2, f4], [w1h, sf2]]);
@@ -278,7 +279,16 @@ export namespace epa {
     polytop.remove(s2);
 
     // insert newly generated faces
-    for (let face of [f0, f1, f2, f3, f4, f5, sf0, sf1, sf2, sf3, sf4, sf5]) {
+    let list = [f0, f1, f2, f3, f4, f5, sf0, sf1, sf2, sf3, sf4, sf5];
+    for (let face of list) {
+      if (
+        vec3.equals(face.vertices[0], face.vertices[1]) ||
+        vec3.equals(face.vertices[1], face.vertices[2]) ||
+        vec3.equals(face.vertices[2], face.vertices[0])
+      ) {
+        console.log(list.indexOf(face));
+        // debugger;
+      }
       calcFaceDistance(face);
       polytop.enqueue(face);
     }

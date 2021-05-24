@@ -144,40 +144,83 @@ export const getPositions = (mesh: Mesh): vec3[] => {
   return points;
 };
 
-export const createMeshFromPolytop = (polytop: epa.Polytop): Mesh => {
+export const createMeshFromPolytop = (
+  polytop: epa.Polytop,
+  wired = true
+): Mesh => {
   const vertexData = [];
   const indexData = [];
 
-  for (let face of polytop) {
-    for (let i = 0; i < 3; i++) {
-      indexData.push(vertexData.length / 6);
-      vertexData.push(...face.vertices[i], ...WHITE);
+  if (wired) {
+    for (let face of polytop) {
+      for (let i = 0; i < 3; i++) {
+        indexData.push(vertexData.length / 6);
+        vertexData.push(...face.vertices[i], ...WHITE);
 
-      indexData.push(vertexData.length / 6);
-      vertexData.push(...face.vertices[(i + 1) % 3], ...WHITE);
-    }
-  }
-
-  return {
-    vertexFormat: [
-      {
-        semantics: 'position',
-        size: 3,
-        type: WebGL2RenderingContext.FLOAT,
-        slot: 0,
-        offset: 0,
-        stride: 24
-      },
-      {
-        semantics: 'color',
-        size: 3,
-        type: WebGL2RenderingContext.FLOAT,
-        slot: 1,
-        offset: 12,
-        stride: 24
+        indexData.push(vertexData.length / 6);
+        vertexData.push(...face.vertices[(i + 1) % 3], ...WHITE);
       }
-    ],
-    vertexData: Float32Array.from(vertexData),
-    indexData: Uint16Array.from(indexData)
-  };
+    }
+
+    return {
+      vertexFormat: [
+        {
+          semantics: 'position',
+          size: 3,
+          type: WebGL2RenderingContext.FLOAT,
+          slot: 0,
+          offset: 0,
+          stride: 24
+        },
+        {
+          semantics: 'color',
+          size: 3,
+          type: WebGL2RenderingContext.FLOAT,
+          slot: 1,
+          offset: 12,
+          stride: 24
+        }
+      ],
+      vertexData: Float32Array.from(vertexData),
+      indexData: Uint16Array.from(indexData)
+    };
+  } else {
+    for (let face of polytop) {
+      const normal = vec3.create();
+      const e0 = vec3.create();
+      const e1 = vec3.create();
+      vec3.subtract(e0, face.vertices[1], face.vertices[0]);
+      vec3.subtract(e1, face.vertices[2], face.vertices[0]);
+      vec3.cross(normal, e0, e1);
+      vec3.normalize(normal, normal);
+
+      for (let i = 0; i < 3; i++) {
+        indexData.push(vertexData.length / 6);
+        vertexData.push(...face.vertices[i], ...normal);
+      }
+    }
+
+    return {
+      vertexFormat: [
+        {
+          semantics: 'position',
+          size: 3,
+          type: WebGL2RenderingContext.FLOAT,
+          slot: 0,
+          offset: 0,
+          stride: 24
+        },
+        {
+          semantics: 'normal',
+          size: 3,
+          type: WebGL2RenderingContext.FLOAT,
+          slot: 1,
+          offset: 12,
+          stride: 24
+        }
+      ],
+      vertexData: Float32Array.from(vertexData),
+      indexData: Uint16Array.from(indexData)
+    };
+  }
 };
