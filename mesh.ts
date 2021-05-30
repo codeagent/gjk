@@ -1,5 +1,5 @@
 import { vec3, glMatrix } from 'gl-matrix';
-import { epa } from './epa';
+import { epa } from './epa2';
 import { Mesh } from './graphics';
 
 Object.assign(glMatrix, { EPSILON: 1.0e-2 });
