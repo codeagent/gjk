@@ -15,7 +15,7 @@ export namespace epa {
 
   export type Polytop<T extends object = vec3> = PriorityQueue<Face<T>>;
 
-  const closestPointToPlane = (
+  const closestPointOnPlane = (
     out: vec3,
     p0: vec3,
     p1: vec3,
@@ -142,7 +142,7 @@ export namespace epa {
 
     const O = vec3.create();
     for (let face of [face0, face1, face2, face3]) {
-      closestPointToPlane(
+      closestPointOnPlane(
         face.closest,
         face.vertices[0],
         face.vertices[1],
@@ -196,20 +196,21 @@ export namespace epa {
   export const subdivide = (polytop: Polytop, shape: gjk.ShapeInterface) => {
     const face = polytop.dequeue();
 
-    if (
-      !isInsideTriangle(
-        face.vertices[0],
-        face.vertices[0],
-        face.vertices[0],
-        face.closest,
-        face.closest
-      )
-    ) {
-      // never will be approached as closest. Put at the end of queue
-      face.distance = Number.MAX_VALUE;
-      polytop.enqueue(face);
-      return;
-    }
+    // console.log(face);
+    // if (
+    //   !isInsideTriangle(
+    //     face.vertices[0],
+    //     face.vertices[1],
+    //     face.vertices[2],
+    //     face.closest,
+    //     face.closest
+    //   )
+    // ) {
+    //   // never will be approached as closest. Put at the end of queue
+    //   face.distance = Number.MAX_VALUE;
+    //   polytop.enqueue(face);
+    //   return;
+    // }
 
     const w = vec3.create();
     shape.support(w, face.closest);
@@ -220,6 +221,7 @@ export namespace epa {
       getSilhouette(silhouette, face.siblings[i], face.adjacent[i], w);
     }
 
+    console.log(silhouette);
     // @todo:
     // in real epa algorithm use obsolete flag to completly ignore the face
     for (let f of Array.from(polytop)) {
@@ -244,7 +246,7 @@ export namespace epa {
         obsolete: false
       };
 
-      closestPointToPlane(
+      closestPointOnPlane(
         curr.closest,
         curr.vertices[0],
         curr.vertices[1],
@@ -256,6 +258,7 @@ export namespace epa {
       // face.distance = vec3.dot(face.closest, face.closest);
       curr.distance = vec3.length(curr.closest);
 
+      face.siblings[i] = curr;
       polytop.enqueue(curr);
 
       if (last) {

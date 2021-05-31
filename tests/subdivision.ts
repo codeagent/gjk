@@ -1,5 +1,5 @@
 import { fromEvent } from 'rxjs';
-import { map, filter } from 'rxjs/operators';
+import { filter } from 'rxjs/operators';
 import { vec3, vec4 } from 'gl-matrix';
 
 import {
@@ -22,7 +22,7 @@ import {
 } from '../shaders/phong';
 
 import { Sphere } from '../shape';
-import { epa } from '../epa';
+import { epa } from '../epa2';
 import { createMeshFromPolytop } from '../mesh';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -38,11 +38,13 @@ const gridGeometry = renderer.createGeometry(
   WebGL2RenderingContext.LINES
 );
 
+const offset = vec3.fromValues(0.25, 0.25, 0.25);
+
 const simplex = new Set<vec3>([
-  vec3.fromValues(-1.0 + 0.25, 1.0, 1.0),
-  vec3.fromValues(1.0 + 0.25, 1.0, -1.0),
-  vec3.fromValues(1.0 + 0.25, -1.0, 1.0),
-  vec3.fromValues(-1.0 + 0.25, -1.0, -1.0)
+  vec3.fromValues(-1.0 + offset[0], 1.0 + offset[1], 1.0 + offset[2]),
+  vec3.fromValues(1.0 + offset[0], 1.0 + offset[1], -1.0 + offset[2]),
+  vec3.fromValues(1.0 + offset[0], -1.0 + offset[1], 1.0 + offset[2]),
+  vec3.fromValues(-1.0 + offset[0], -1.0 + offset[1], -1.0 + offset[2])
 ]);
 
 let polytop = epa.polytopFromSimplex(simplex);
@@ -64,14 +66,16 @@ const drawables = [
     material: {
       shader: phongShader,
       uniforms: { albedo: vec4.fromValues(1.0, 0.0, 0.0, 1.0) },
-      state: {}
+      state: { cullFace: false }
     },
     geometry: renderer.createGeometry(createMeshFromPolytop(polytop, false)),
-    transform: new Transform(vec3.fromValues(0.25, 0.0, 0.0))
+    transform: new Transform(offset)
   }
 ];
 
-const shape = new Sphere(Math.sqrt(3), new Transform(vec3.fromValues(0.25, 0.0, 0.0)));
+const shape = new Sphere(Math.sqrt(3), new Transform(offset));
+
+console.log(Array.from(polytop));
 
 fromEvent(document, 'keydown')
   .pipe(filter((e: KeyboardEvent) => ['s'].includes(e.key)))
@@ -82,7 +86,7 @@ fromEvent(document, 'keydown')
     drawables[1].geometry = renderer.createGeometry(
       createMeshFromPolytop(polytop, false)
     );
-    console.log(Array.from(polytop));
+    // console.log(Array.from(polytop));
   });
 
 // Loop
