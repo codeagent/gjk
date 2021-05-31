@@ -27,7 +27,7 @@ export namespace epa {
     vec3.subtract(out, p2, p0);
     vec3.cross(out, a, out);
     vec3.sub(a, w, p0);
-    vec3.scaleAndAdd(out, a, out, -vec3.dot(out, a) / vec3.dot(out, out));
+    vec3.scaleAndAdd(out, w, out, -vec3.dot(out, a) / vec3.dot(out, out));
   };
 
   const isInsideTriangle = (
@@ -172,7 +172,7 @@ export namespace epa {
     }
 
     if (
-      vec3.dot(face.closest, support) < vec3.dot(face.closest, face.closest)
+      vec3.dot(face.closest, support) < 0.0 //vec3.dot(face.closest, face.closest)
     ) {
       // not visible from support point, add to silhouette
       out.push([face, i]);
@@ -196,23 +196,23 @@ export namespace epa {
   export const subdivide = (polytop: Polytop, shape: gjk.ShapeInterface) => {
     const face = polytop.dequeue();
 
-    // console.log(face);
-    // if (
-    //   !isInsideTriangle(
-    //     face.vertices[0],
-    //     face.vertices[1],
-    //     face.vertices[2],
-    //     face.closest,
-    //     face.closest
-    //   )
-    // ) {
-    //   // never will be approached as closest. Put at the end of queue
-    //   face.distance = Number.MAX_VALUE;
-    //   polytop.enqueue(face);
-    //   return;
-    // }
+    if (
+      !isInsideTriangle(
+        face.vertices[0],
+        face.vertices[1],
+        face.vertices[2],
+        face.closest,
+        face.closest
+      )
+    ) {
+      // never will be approached as closest. Put at the end of queue
+      face.distance = Number.MAX_VALUE;
+      polytop.enqueue(face);
+      return;
+    }
 
     const w = vec3.create();
+
     shape.support(w, face.closest);
 
     face.obsolete = true;
@@ -221,7 +221,7 @@ export namespace epa {
       getSilhouette(silhouette, face.siblings[i], face.adjacent[i], w);
     }
 
-    console.log(silhouette);
+    // console.log(silhouette);
     // @todo:
     // in real epa algorithm use obsolete flag to completly ignore the face
     for (let f of Array.from(polytop)) {
@@ -230,7 +230,10 @@ export namespace epa {
       }
     }
 
+    console.log(silhouette);
+
     const O = vec3.create();
+    const list = [];
     let last: Face<vec3> = null;
     let first: Face<vec3> = null;
     for (let [face, i] of silhouette) {
@@ -254,7 +257,7 @@ export namespace epa {
         O
       );
 
-      // @todo: use squred length instead
+      // @todo: use squared length instead
       // face.distance = vec3.dot(face.closest, face.closest);
       curr.distance = vec3.length(curr.closest);
 
@@ -266,9 +269,16 @@ export namespace epa {
       } else {
         first = curr;
       }
+
+      list.push(curr);
       last = curr;
     }
 
     first.siblings[2] = last;
+    last.siblings[1] = first;
+
+    // list.push(last);
+
+    console.log(list);
   };
 }

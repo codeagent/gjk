@@ -75,19 +75,21 @@ const drawables = [
 
 const shape = new Sphere(Math.sqrt(3), new Transform(offset));
 
-console.log(Array.from(polytop));
+const subdivide = () => {
+  epa.subdivide(polytop, shape);
+
+  renderer.destroyGeometry(drawables[1].geometry);
+  drawables[1].geometry = renderer.createGeometry(
+    createMeshFromPolytop(polytop, false)
+  );
+  console.log(Array.from(polytop));
+};
+
+subdivide();
 
 fromEvent(document, 'keydown')
   .pipe(filter((e: KeyboardEvent) => ['s'].includes(e.key)))
-  .subscribe(() => {
-    epa.subdivide(polytop, shape);
-
-    renderer.destroyGeometry(drawables[1].geometry);
-    drawables[1].geometry = renderer.createGeometry(
-      createMeshFromPolytop(polytop, false)
-    );
-    // console.log(Array.from(polytop));
-  });
+  .subscribe(() => subdivide());
 
 // Loop
 
