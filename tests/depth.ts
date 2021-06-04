@@ -25,6 +25,7 @@ import objects from '../objects/objects.obj';
 
 import { AxesController } from '../graphics/gizmos/axes-controller';
 import { gjk } from '../gjk';
+import { epa } from '../epa';
 import { getPositions } from '../mesh';
 import { Box, Cone, Cylinder, Polyhedra, Sphere } from '../shape';
 
@@ -80,7 +81,7 @@ const drawables = [
       state: { cullFace: false }
     },
     geometry: object1,
-    transform: new Transform(vec3.fromValues(4.0, 2.0, -4.0))
+    transform: new Transform(vec3.fromValues(1.0, 1.0, -1.0))
   }
 ];
 
@@ -114,7 +115,8 @@ const shape1 = new Cylinder(2.0, 1.0, axes1.targetTransform);
 // const shape1 = new Sphere(1.0, axes1.targetTransform);
 
 // Loop
-const simplex = new Set<gjk.SupportPoint>();
+const gjkSimplex = new Set<gjk.SupportPoint>();
+const epaSimplex = new Set<vec3>();
 
 const draw = () => {
   cameraController.update();
@@ -138,9 +140,22 @@ const draw = () => {
   axes1.update(pixes);
 
   //
-  simplex.clear();
-  const areIntersect = gjk.areIntersect(shape0, shape1, simplex);
-  document.getElementById('distance').innerHTML = `${areIntersect}`;
+  gjkSimplex.clear();
+  epaSimplex.clear();
+  const areIntersect = gjk.areIntersect(shape0, shape1, gjkSimplex);
+
+  if (areIntersect) {
+    for (let e of Array.from(gjkSimplex)) {
+      epaSimplex.add(e.diff);
+    }
+    document.getElementById('distance').innerHTML = `${epa.penetrationDepth(
+      shape0,
+      shape1,
+      epaSimplex
+    )}`;
+  } else {
+    document.getElementById('distance').innerHTML = `${-1}`;
+  }
 
   drawables[1].material.uniforms['albedo'] = drawables[2].material.uniforms[
     'albedo'

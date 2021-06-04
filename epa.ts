@@ -276,11 +276,134 @@ export namespace epa {
       } else {
         first = curr;
       }
-
       last = curr;
     }
 
     first.siblings[2] = last;
     last.siblings[1] = first;
+  };
+
+  export class MinkowskiDifference {
+    private opposite = vec3.create();
+
+    constructor(
+      public readonly shape0: gjk.ShapeInterface,
+      public readonly shape1: gjk.ShapeInterface
+    ) {}
+
+    support(dir: vec3): gjk.SupportPoint {
+      vec3.negate(this.opposite, dir);
+
+      const support0 = vec3.create();
+      const support1 = vec3.create();
+      const diff = vec3.create();
+
+      this.shape0.support(support0, dir);
+      this.shape1.support(support1, this.opposite);
+      vec3.subtract(diff, support0, support1);
+
+      return { support0, support1, diff };
+    }
+  }
+
+  export const penetrationDepth = (
+    shape0: gjk.ShapeInterface,
+    shape1: gjk.ShapeInterface,
+    simplex: gjk.Simplex<vec3>,
+    maxIterations = 25,
+    epsilon = 1.0e-3
+  ): number => {
+    const minkowski = new MinkowskiDifference(shape0, shape1);
+    const polytop = polytopFromSimplex(simplex);
+    let face: Face<vec3> = null;
+
+    while (maxIterations-- > 0) {
+      face = polytop.dequeue();
+
+      if (
+        !isInsideTriangle(
+          face.vertices[0],
+          face.vertices[1],
+          face.vertices[2],
+          face.closest,
+          face.closest
+        )
+      ) {
+        // never will be approached as closest. Put at the end of queue
+        face.distance = Number.MAX_VALUE;
+        polytop.enqueue(face);
+        continue;
+      }
+
+      let support = minkowski.support(face.closest);
+      const lower = Math.sqrt(vec3.dot(face.closest, face.closest));
+      const upper = vec3.dot(face.closest, support.diff) / lower;
+
+      if (upper - lower < epsilon) {
+        break;
+      }
+
+      face.obsolete = true;
+      const silhouette: Silhouette = [];
+      for (let i = 0; i < 3; i++) {
+        getSilhouette(
+          silhouette,
+          face.siblings[i],
+          face.adjacent[i],
+          support.diff
+        );
+      }
+
+      // in real epa algorithm use obsolete flag to completly ignore the face
+      for (let f of Array.from(polytop)) {
+        if (f.obsolete) {
+          polytop.remove(f);
+        }
+      }
+
+      const O = vec3.create();
+      let last: Face<vec3> = null;
+      let first: Face<vec3> = null;
+
+      for (let [face, i] of silhouette) {
+        const p0 = face.vertices[(i + 1) % 3];
+        const p1 = face.vertices[i];
+        const p2 = support.diff;
+        const curr: Face<vec3> = {
+          vertices: [p0, p1, p2],
+          siblings: [face, null, last],
+          adjacent: [i, 2, 1],
+          distance: 0.0,
+          closest: vec3.create(),
+          obsolete: false
+        };
+
+        closestPointOnPlane(
+          curr.closest,
+          curr.vertices[0],
+          curr.vertices[1],
+          curr.vertices[2],
+          O
+        );
+
+        curr.distance = vec3.dot(curr.closest, curr.closest);
+        face.siblings[i] = curr;
+        face.adjacent[i] = 0;
+
+        polytop.enqueue(curr);
+
+        if (last) {
+          last.siblings[1] = curr;
+        } else {
+          first = curr;
+        }
+        last = curr;
+      }
+
+      first.siblings[2] = last;
+      last.siblings[1] = first;
+    }
+
+    return face ? vec3.length(face.closest) : -1;
   };
 }
