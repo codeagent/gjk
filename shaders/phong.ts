@@ -34,7 +34,14 @@ void main()
 {
   vec3 n = normalize(_normal);
   vec3 l = normalize(pos - _position);
-  float nol = dot(n, l) * 0.7 + 0.3;
-  color = albedo * vec4(vec3(nol), 1.0f);
+  float d = dot(n, l);
+  vec3 c = albedo.rgb;
+  if(d < 0.0) {
+    c = vec3(1.0) - c;
+    d = -d;
+  }
+
+  float nol = d * 0.7 + 0.3;
+  color = vec4(c, 1.0) * vec4(vec3(nol), 1.0f);
 }
 `;

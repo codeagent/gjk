@@ -22,7 +22,7 @@ import {
 } from '../shaders/phong';
 
 import { Sphere } from '../shape';
-import { epa } from '../epa2';
+import { epa } from '../epa';
 import { createMeshFromPolytop } from '../mesh';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -39,12 +39,13 @@ const gridGeometry = renderer.createGeometry(
 );
 
 const offset = vec3.fromValues(0.25, 0.25, 0.25);
+const radius = 2.0;
 
 const simplex = new Set<vec3>([
-  vec3.fromValues(-1.0 + offset[0], 1.0 + offset[1], 1.0 + offset[2]),
-  vec3.fromValues(1.0 + offset[0], 1.0 + offset[1], -1.0 + offset[2]),
-  vec3.fromValues(1.0 + offset[0], -1.0 + offset[1], 1.0 + offset[2]),
-  vec3.fromValues(-1.0 + offset[0], -1.0 + offset[1], -1.0 + offset[2])
+  vec3.fromValues(-radius + offset[0], radius + offset[1], radius + offset[2]),
+  vec3.fromValues(radius + offset[0], radius + offset[1], -radius + offset[2]),
+  vec3.fromValues(radius + offset[0], -radius + offset[1], radius + offset[2]),
+  vec3.fromValues(-radius + offset[0], -radius + offset[1], -radius + offset[2])
 ]);
 
 let polytop = epa.polytopFromSimplex(simplex);
@@ -73,8 +74,9 @@ const drawables = [
   }
 ];
 
-const shape = new Sphere(Math.sqrt(3), new Transform(offset));
+const shape = new Sphere(Math.sqrt(3 * radius * radius), new Transform(offset));
 
+epa.checkAdjacency(polytop);
 const subdivide = () => {
   epa.subdivide(polytop, shape);
 
@@ -82,10 +84,9 @@ const subdivide = () => {
   drawables[1].geometry = renderer.createGeometry(
     createMeshFromPolytop(polytop, false)
   );
-  console.log(Array.from(polytop));
-};
 
-subdivide();
+  epa.checkAdjacency(polytop);
+};
 
 fromEvent(document, 'keydown')
   .pipe(filter((e: KeyboardEvent) => ['s'].includes(e.key)))
