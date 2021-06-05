@@ -2,6 +2,7 @@ import { vec3 } from 'gl-matrix';
 
 import { gjk } from './gjk';
 import { PriorityQueue } from './priority-queue';
+import { ShapeInterface } from './shape';
 
 export namespace epa {
   export interface Face<T extends object> {
@@ -152,6 +153,205 @@ export namespace epa {
 
       face.distance = vec3.dot(face.closest, face.closest);
 
+      queue.enqueue(face);
+    }
+
+    return queue;
+  };
+
+  export const createTetrahedron = (
+    w0: vec3,
+    w1: vec3,
+    w2: vec3,
+    w3: vec3
+  ): Polytop => {
+    const w1w0 = vec3.create();
+    const w2w0 = vec3.create();
+
+    vec3.subtract(w1w0, w1, w0);
+    vec3.subtract(w2w0, w2, w0);
+
+    const x = vec3.create();
+    vec3.cross(x, w2w0, w1w0);
+
+    const w3w0 = vec3.create();
+    vec3.subtract(w3w0, w3, w0);
+
+    // preserve ccw orientation: swap w1 and w2
+    if (vec3.dot(w3w0, x) > 0.0) {
+      const tmp = w2;
+      w2 = w1;
+      w1 = tmp;
+    }
+
+    const face0: Face<vec3> = {
+      vertices: [w0, w1, w3],
+      siblings: null,
+      adjacent: null,
+      distance: 0.0,
+      closest: vec3.create(),
+      obsolete: false
+    };
+
+    const face1: Face<vec3> = {
+      vertices: [w1, w2, w3],
+      siblings: null,
+      adjacent: null,
+      distance: 0.0,
+      closest: vec3.create(),
+      obsolete: false
+    };
+
+    const face2: Face<vec3> = {
+      vertices: [w2, w0, w3],
+      siblings: null,
+      adjacent: null,
+      distance: 0.0,
+      closest: vec3.create(),
+      obsolete: false
+    };
+
+    const face3: Face<vec3> = {
+      vertices: [w1, w0, w2],
+      siblings: null,
+      adjacent: null,
+      distance: 0.0,
+      closest: vec3.create(),
+      obsolete: false
+    };
+
+    face0.siblings = [face3, face1, face2];
+    face1.siblings = [face3, face2, face0];
+    face2.siblings = [face3, face0, face1];
+    face3.siblings = [face0, face2, face1];
+
+    face0.adjacent = [0, 2, 1];
+    face1.adjacent = [2, 2, 1];
+    face2.adjacent = [1, 2, 1];
+    face3.adjacent = [0, 0, 0];
+
+    const queue = new PriorityQueue<Face<vec3>>(
+      (a: Face<vec3>, b: Face<vec3>) => a.distance - b.distance
+    );
+
+    const O = vec3.create();
+    for (let face of [face0, face1, face2, face3]) {
+      closestPointOnPlane(
+        face.closest,
+        face.vertices[0],
+        face.vertices[1],
+        face.vertices[2],
+        O
+      );
+
+      face.distance = vec3.dot(face.closest, face.closest);
+
+      queue.enqueue(face);
+    }
+
+    return queue;
+  };
+
+  export const createHexahedronFromTriangle = (
+    w0: vec3,
+    w1: vec3,
+    w2: vec3,
+    shape: ShapeInterface
+  ) => {
+    const n = vec3.create();
+    const w3 = vec3.create();
+    const w4 = vec3.create();
+
+    vec3.subtract(w3, w1, w0);
+    vec3.subtract(w4, w2, w0);
+    vec3.cross(n, w3, w4);
+
+    shape.support(w3, n);
+    vec3.negate(n, n);
+    shape.support(w4, n);
+
+    const face0: Face<vec3> = {
+      vertices: [w0, w1, w3],
+      siblings: null,
+      adjacent: null,
+      distance: 0.0,
+      closest: vec3.create(),
+      obsolete: false
+    };
+
+    const face1: Face<vec3> = {
+      vertices: [w1, w2, w3],
+      siblings: null,
+      adjacent: null,
+      distance: 0.0,
+      closest: vec3.create(),
+      obsolete: false
+    };
+
+    const face2: Face<vec3> = {
+      vertices: [w2, w0, w3],
+      siblings: null,
+      adjacent: null,
+      distance: 0.0,
+      closest: vec3.create(),
+      obsolete: false
+    };
+
+    const face3: Face<vec3> = {
+      vertices: [w0, w4, w1],
+      siblings: null,
+      adjacent: null,
+      distance: 0.0,
+      closest: vec3.create(),
+      obsolete: false
+    };
+
+    const face4: Face<vec3> = {
+      vertices: [w1, w4, w2],
+      siblings: null,
+      adjacent: null,
+      distance: 0.0,
+      closest: vec3.create(),
+      obsolete: false
+    };
+
+    const face5: Face<vec3> = {
+      vertices: [w2, w4, w0],
+      siblings: null,
+      adjacent: null,
+      distance: 0.0,
+      closest: vec3.create(),
+      obsolete: false
+    };
+
+    face0.siblings = [face3, face1, face2];
+    face1.siblings = [face4, face2, face0];
+    face2.siblings = [face5, face0, face1];
+    face3.siblings = [face5, face4, face0];
+    face4.siblings = [face3, face5, face1];
+    face5.siblings = [face4, face3, face2];
+
+    face0.adjacent = [2, 2, 1];
+    face1.adjacent = [2, 2, 1];
+    face2.adjacent = [2, 2, 1];
+    face3.adjacent = [1, 0, 0];
+    face4.adjacent = [1, 0, 0];
+    face5.adjacent = [1, 0, 0];
+
+    const queue = new PriorityQueue<Face<vec3>>(
+      (a: Face<vec3>, b: Face<vec3>) => a.distance - b.distance
+    );
+
+    const O = vec3.create();
+    for (let face of [face0, face1, face2, face3, face4, face5]) {
+      closestPointOnPlane(
+        face.closest,
+        face.vertices[0],
+        face.vertices[1],
+        face.vertices[2],
+        O
+      );
+      face.distance = vec3.dot(face.closest, face.closest);
       queue.enqueue(face);
     }
 

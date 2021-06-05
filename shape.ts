@@ -6,7 +6,7 @@ import { Transform } from './graphics';
  * http://www.dtecta.com/papers/jgt98convex.pdf
  */
 
-interface ShapeInterface {
+export interface ShapeInterface {
   support(out: vec3, dir: vec3): vec3;
   origin: vec3;
 }

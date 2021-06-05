@@ -41,14 +41,21 @@ const gridGeometry = renderer.createGeometry(
 const offset = vec3.fromValues(0.25, 0.25, 0.25);
 const radius = 2.0;
 
-const simplex = new Set<vec3>([
-  vec3.fromValues(-radius + offset[0], radius + offset[1], radius + offset[2]),
+const shape = new Sphere(Math.sqrt(3 * radius * radius), new Transform(offset));
+
+const simplex = [
+  // vec3.fromValues(-radius + offset[0], radius + offset[1], radius + offset[2]),
   vec3.fromValues(radius + offset[0], radius + offset[1], -radius + offset[2]),
   vec3.fromValues(radius + offset[0], -radius + offset[1], radius + offset[2]),
   vec3.fromValues(-radius + offset[0], -radius + offset[1], -radius + offset[2])
-]);
+];
 
-let polytop = epa.polytopFromSimplex(simplex);
+let polytop = epa.createHexahedronFromTriangle(
+  simplex[0],
+  simplex[1],
+  simplex[2],
+  shape
+);
 const camera = new Camera(45.0, canvas.width / canvas.height, 0.25, 100.0);
 camera.position = [5.0, 5.0, 5.0];
 const cameraController = new ArcRotationCameraController(canvas, camera);
@@ -73,8 +80,6 @@ const drawables = [
     transform: new Transform(offset)
   }
 ];
-
-const shape = new Sphere(Math.sqrt(3 * radius * radius), new Transform(offset));
 
 epa.checkAdjacency(polytop);
 const subdivide = () => {

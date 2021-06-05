@@ -144,7 +144,7 @@ const draw = () => {
   epaSimplex.clear();
   const areIntersect = gjk.areIntersect(shape0, shape1, gjkSimplex);
 
-  if (areIntersect) {
+  if (areIntersect && gjkSimplex.size === 4) {
     for (let e of Array.from(gjkSimplex)) {
       epaSimplex.add(e.diff);
     }
