@@ -163,3 +163,25 @@ export class Cylinder implements ShapeInterface {
     return vec3.transformMat4(out, out, this.transform.transform);
   }
 }
+
+export class MinkowskiDifference implements ShapeInterface {
+  private opposite = vec3.create();
+  private support0 = vec3.create();
+  private support1 = vec3.create();
+
+  get origin(): vec3 {
+    return vec3.create();
+  }
+
+  constructor(
+    public readonly shape0: ShapeInterface,
+    public readonly shape1: ShapeInterface
+  ) {}
+
+  support(out: vec3, dir: vec3): vec3 {
+    vec3.negate(this.opposite, dir);
+    this.shape0.support(this.support0, dir);
+    this.shape1.support(this.support1, this.opposite);
+    return vec3.subtract(out, this.support0, this.support1);
+  }
+}

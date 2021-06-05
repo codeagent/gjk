@@ -144,7 +144,7 @@ const draw = () => {
   epaSimplex.clear();
   const areIntersect = gjk.areIntersect(shape0, shape1, gjkSimplex);
 
-  if (areIntersect && gjkSimplex.size === 4) {
+  if (areIntersect) {
     for (let e of Array.from(gjkSimplex)) {
       epaSimplex.add(e.diff);
     }
@@ -154,7 +154,7 @@ const draw = () => {
       epaSimplex
     )}`;
   } else {
-    document.getElementById('distance').innerHTML = `${-1}`;
+    document.getElementById('distance').innerHTML = `${0}`;
   }
 
   drawables[1].material.uniforms['albedo'] = drawables[2].material.uniforms[

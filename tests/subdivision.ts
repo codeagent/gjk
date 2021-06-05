@@ -44,18 +44,32 @@ const radius = 2.0;
 const shape = new Sphere(Math.sqrt(3 * radius * radius), new Transform(offset));
 
 const simplex = [
-  // vec3.fromValues(-radius + offset[0], radius + offset[1], radius + offset[2]),
+  vec3.fromValues(-radius + offset[0], radius + offset[1], radius + offset[2]),
   vec3.fromValues(radius + offset[0], radius + offset[1], -radius + offset[2]),
   vec3.fromValues(radius + offset[0], -radius + offset[1], radius + offset[2]),
   vec3.fromValues(-radius + offset[0], -radius + offset[1], -radius + offset[2])
 ];
 
-let polytop = epa.createHexahedronFromTriangle(
+let polytop = epa.createTetrahedron(
   simplex[0],
   simplex[1],
   simplex[2],
-  shape
+  simplex[3]
 );
+
+// let polytop = epa.createHexahedronFromTriangle(
+//   simplex[0],
+//   simplex[1],
+//   simplex[2],
+//   shape
+// );
+
+// let polytop = epa.createHexahedronFromLineSegment(
+//   simplex[0],
+//   simplex[1],
+//   shape
+// );
+
 const camera = new Camera(45.0, canvas.width / canvas.height, 0.25, 100.0);
 camera.position = [5.0, 5.0, 5.0];
 const cameraController = new ArcRotationCameraController(canvas, camera);
