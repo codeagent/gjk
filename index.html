@@ -1,4 +1,80 @@
-<div id="container">
-  <label id="distance"></label>
-  <canvas id="canvas" width="1200" height="800"></canvas>
+<div class="uk-container uk-container-large uk-margin-small-top">
+
+  <ul uk-tab uk-switcher>
+    <li class="uk-active"><a href="#">Intersection</a></li>
+    <li><a href="#">Closests points</a></li>
+    <li><a href="#">Subdivisions</a></li>
+  </ul>
+
+  <ul class="uk-switcher uk-margin-small">
+    <li>
+      <div class="uk-grid-collapse" uk-grid>
+        <div class="uk-width-5-6">
+          <label id="distance"></label>
+          <br/>
+          <canvas id="canvas" width="1120" height="750"></canvas>
+        </div>
+        <div class="uk-width-1-6">
+          <form class="uk-form-stacked">
+
+            <div class="uk-margin-small">
+              <label class="uk-form-label">Object1</label>
+              <div class="uk-form-controls">
+                <select class="uk-select uk-form-small">
+                  <option value="sphere">Sphere</option>
+                  <option value="box">Box</option>
+                  <option value="cylinder">Cylinder</option>
+                  <option value="cone">Cone</option>
+                  <option value="hull1">Convex hull 1</option>
+                  <option value="hull2">Convex hull 2</option>
+                </select>
+              </div>
+              <label>[1.0, 0.0, 0.0]</label>
+            </div>
+
+            <div class="uk-margin-small">
+              <label class="uk-form-label">Object2</label>
+              <div class="uk-form-controls">
+                <select class="uk-select uk-form-small">
+                    <option value="sphere">Sphere</option>
+                    <option value="box">Box</option>
+                    <option value="cylinder">Cylinder</option>
+                    <option value="cone">Cone</option>
+                    <option value="hull1">Convex hull 1</option>
+                    <option value="hull2">Convex hull 2</option>
+                  </select>
+              </div>
+            </div>
+
+
+
+
+
+
+
+            <div class="uk-margin">
+              <label class="uk-form-label" for="form-stacked-select">Select</label>
+              <div class="uk-form-controls">
+
+              </div>
+            </div>
+
+            <div class="uk-margin">
+              <div class="uk-form-label">Radio</div>
+              <div class="uk-form-controls">
+                <label><input class="uk-radio" type="radio" name="radio1"> Option 01</label><br>
+                <label><input class="uk-radio" type="radio" name="radio1"> Option 02</label>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </li>
+    <li>Hello again! <a href="#" uk-switcher-item="next">Next item</a></li>
+    <li>Bazinga! <a href="#" uk-switcher-item="previous">Previous item</a></li>
+  </ul>
+
+
 </div>

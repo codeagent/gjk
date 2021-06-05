@@ -9,24 +9,24 @@ import {
   loadObj,
   Renderer,
   Transform
-} from '../graphics';
+} from '../../graphics';
 
 import {
   vertex as phongVertex,
   fragment as phongFragment
-} from '../shaders/phong';
+} from '../../shaders/phong';
 
 import {
   vertex as flatVertex,
   fragment as flatFragment
-} from '../shaders/flat';
+} from '../../shaders/flat';
 
-import objects from '../objects/objects.obj';
+import objects from '../../objects/objects.obj';
 
-import { AxesController } from '../graphics/gizmos/axes-controller';
-import { gjk } from '../gjk';
-import { getPositions } from '../mesh';
-import { Box, Cone, Cylinder, Polyhedra, Sphere } from '../shape';
+import { AxesController } from '../../graphics/gizmos/axes-controller';
+import { gjk } from '../../gjk';
+import { getPositions } from '../../mesh';
+import { Box, Cone, Cylinder, Polyhedra, Sphere } from '../../shape';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 
