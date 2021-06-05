@@ -469,6 +469,11 @@ export namespace gjk {
       if (simplex.size === 1) {
         const p = Array.from(simplex.values());
         vec3.copy(d, p[0].diff);
+
+        // closest point is too close to origin
+        if (vec3.distance(d, o) < epsilon) {
+          return true;
+        }
       } else if (simplex.size === 2) {
         const p = Array.from(simplex.values());
         const b = vec2.create();
@@ -479,6 +484,11 @@ export namespace gjk {
           }
         }
         fromBarycentric(d, [p[0].diff, p[1].diff], b);
+
+        // too close to line, return as having intersecton
+        if (vec3.distance(d, o) < epsilon) {
+          return true;
+        }
       } else if (simplex.size === 3) {
         const p = Array.from(simplex.values());
         const b = vec3.create();
@@ -489,6 +499,11 @@ export namespace gjk {
           }
         }
         fromBarycentric(d, [p[0].diff, p[1].diff, p[2].diff], b);
+
+        // too close to triangle, return as having intersecton
+        if (vec3.distance(d, o) < epsilon) {
+          return true;
+        }
       } else {
         const p = Array.from(simplex.values());
         const b = vec4.create();
@@ -500,6 +515,7 @@ export namespace gjk {
           p[3].diff,
           o
         );
+        // in tetrahedron, return as having intersecton
         if (b[0] < 0 || b[1] < 0 || b[2] < 0 || b[3] < 0) {
           return true;
         }
@@ -518,7 +534,9 @@ export namespace gjk {
       const s = support(vec3.fromValues(-d[0], -d[1], -d[2]));
 
       // no more extent in -d direction
-      if (Math.abs(vec3.dot(s.diff, d) - vec3.dot(d, d)) < epsilon) {
+      const upper = vec3.dot(d, d);
+      const lower = vec3.dot(s.diff, d);
+      if (upper - lower < epsilon) {
         return false;
       }
 

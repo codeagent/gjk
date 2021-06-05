@@ -39,8 +39,8 @@ const phongShader = renderer.createShader(phongVertex, phongFragment);
 const flatShader = renderer.createShader(flatVertex, flatFragment);
 const meshes = loadObj(objects);
 
-const object0 = renderer.createGeometry(meshes['cylinder']);
-const object1 = renderer.createGeometry(meshes['cylinder']);
+const object0 = renderer.createGeometry(meshes['object1']);
+const object1 = renderer.createGeometry(meshes['object2']);
 const gridGeometry = renderer.createGeometry(
   createGrid(),
   WebGL2RenderingContext.LINES
@@ -96,18 +96,18 @@ fromEvent(document, 'keydown')
   )
   .subscribe(mode => (axes0.mode = axes1.mode = mode));
 
-// const shape0 = new Polyhedra(
-//   getPositions(meshes['object1']),
-//   axes0.targetTransform
-// );
-// const shape1 = new Polyhedra(
-//   getPositions(meshes['object2']),
-//   axes1.targetTransform
-// );
+const shape0 = new Polyhedra(
+  getPositions(meshes['object1']),
+  axes0.targetTransform
+);
+const shape1 = new Polyhedra(
+  getPositions(meshes['object2']),
+  axes1.targetTransform
+);
 // const shape0 = new Box(vec3.fromValues(0.5, 0.5, 0.5), axes0.targetTransform);
 // const shape1 = new Box(vec3.fromValues(0.5, 0.5, 0.5), axes1.targetTransform);
-const shape0 = new Cylinder(2.0, 1.0, axes0.targetTransform);
-const shape1 = new Cylinder(2.0, 1.0, axes1.targetTransform);
+// const shape0 = new Cylinder(2.0, 1.0, axes0.targetTransform);
+// const shape1 = new Cylinder(2.0, 1.0, axes1.targetTransform);
 // const shape0 = new Cone(2.0, 1.0, axes0.targetTransform);
 // const shape1 = new Cone(2.0, 1.0, axes1.targetTransform);
 // const shape0 = new Sphere(1.0, axes0.targetTransform);
