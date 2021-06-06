@@ -15,59 +15,178 @@
           <canvas id="canvas" width="1120" height="750"></canvas>
         </div>
         <div class="uk-width-1-6">
-          <form class="uk-form-stacked">
+          <ul uk-accordion="multiple: true">
+            <li class="uk-open">
+              <a class="uk-accordion-title" href="#">Object1</a>
+              <div class="uk-margin-small-top uk-accordion-content">
+                <form>
+                  <div class="uk-margin-small">
+                    <div class="uk-form-controls">
+                      <select class="uk-select uk-form-small">
+                        <option value="sphere">Sphere</option>
+                        <option value="box">Box</option>
+                        <option value="cylinder">Cylinder</option>
+                        <option value="cone">Cone</option>
+                        <option value="hull1">Convex hull 1</option>
+                        <option value="hull2">Convex hull 2</option>
+                      </select>
+                    </div>
+                  </div>
 
-            <div class="uk-margin-small">
-              <label class="uk-form-label">Object1</label>
-              <div class="uk-form-controls">
-                <select class="uk-select uk-form-small">
-                  <option value="sphere">Sphere</option>
-                  <option value="box">Box</option>
-                  <option value="cylinder">Cylinder</option>
-                  <option value="cone">Cone</option>
-                  <option value="hull1">Convex hull 1</option>
-                  <option value="hull2">Convex hull 2</option>
-                </select>
+                  <div class="uk-margin-small">
+                    <div class="uk-grid-collapse uk-child-width-expand@s uk-text-center" uk-grid>
+                      <div>
+                        <input class="uk-input uk-form-small" type="number" placeholder="x" step="0.01">
+                      </div>
+                      <div>
+                        <input class="uk-input uk-form-small" type="number" placeholder="y" step="0.01">
+                      </div>
+                      <div>
+                        <input class="uk-input uk-form-small" type="number" placeholder="z" step="0.01">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="uk-margin-small">
+                    <div class="uk-grid-collapse uk-child-width-expand@s uk-text-center" uk-grid>
+                      <div>
+                        <input class="uk-input uk-form-small" type="number" placeholder="rx" step="0.01">
+                      </div>
+                      <div>
+                        <input class="uk-input uk-form-small" type="number" placeholder="ry" step="0.01">
+                      </div>
+                      <div>
+                        <input class="uk-input uk-form-small" type="number" placeholder="rz" step="0.01">
+                      </div>
+                    </div>
+                  </div>
+                </form>
               </div>
-              <label>[1.0, 0.0, 0.0]</label>
-            </div>
+            </li>
 
-            <div class="uk-margin-small">
-              <label class="uk-form-label">Object2</label>
-              <div class="uk-form-controls">
-                <select class="uk-select uk-form-small">
-                    <option value="sphere">Sphere</option>
-                    <option value="box">Box</option>
-                    <option value="cylinder">Cylinder</option>
-                    <option value="cone">Cone</option>
-                    <option value="hull1">Convex hull 1</option>
-                    <option value="hull2">Convex hull 2</option>
-                  </select>
+            <li class="uk-open">
+              <a class="uk-accordion-title" href="#">Object2</a>
+              <div class="uk-margin-small-top uk-accordion-content">
+                <form>
+                  <div class="uk-margin-small">
+                    <div class="uk-form-controls">
+                      <select class="uk-select uk-form-small">
+                        <option value="sphere">Sphere</option>
+                        <option value="box">Box</option>
+                        <option value="cylinder">Cylinder</option>
+                        <option value="cone">Cone</option>
+                        <option value="hull1">Convex hull 1</option>
+                        <option value="hull2">Convex hull 2</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="uk-margin-small">
+                    <div class="uk-grid-collapse uk-child-width-expand@s uk-text-center" uk-grid>
+                      <div>
+                        <input class="uk-input uk-form-small" type="number" placeholder="x" step="0.01">
+                      </div>
+                      <div>
+                        <input class="uk-input uk-form-small" type="number" placeholder="y" step="0.01">
+                      </div>
+                      <div>
+                        <input class="uk-input uk-form-small" type="number" placeholder="z" step="0.01">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="uk-margin-small">
+                    <div class="uk-grid-collapse uk-child-width-expand@s uk-text-center" uk-grid>
+                      <div>
+                        <input class="uk-input uk-form-small" type="number" placeholder="rx" step="0.01">
+                      </div>
+                      <div>
+                        <input class="uk-input uk-form-small" type="number" placeholder="ry" step="0.01">
+                      </div>
+                      <div>
+                        <input class="uk-input uk-form-small" type="number" placeholder="rz" step="0.01">
+                      </div>
+                    </div>
+                  </div>
+                </form>
               </div>
-            </div>
+            </li>
+
+            <li class="uk-open">
+              <a class="uk-accordion-title" href="#">Algorithm</a>
+              <div class="uk-margin-small-top uk-accordion-content">
+                <form>
+
+                  <div class="uk-margin-small uk-text-small">
+                    <div class="uk-grid-collapse" uk-grid>
+                      <div class="uk-width-expand">Time</div>
+                      <div class="uk-width-auto uk-text-secondary">0.00 s</div>
+                    </div>
+                  </div>
 
 
+                  <div class="uk-margin-small uk-text-small">
+                    <div class="uk-grid-collapse" uk-grid>
+                      <div class="uk-width-expand">Simplex size</div>
+                      <div class="uk-width-auto uk-text-secondary">4</div>
+                    </div>
+                  </div>
 
+                  <div class="uk-margin-small">
+                    <label class="uk-form-label">Max iterations</label>
+                    <div class="uk-form-controls">
+                      <input class="uk-input  uk-form-small" type="number" placeholder="25" step="1" min="1">
+                    </div>
+                  </div>
 
-
-
-
-            <div class="uk-margin">
-              <label class="uk-form-label" for="form-stacked-select">Select</label>
-              <div class="uk-form-controls">
-
+                  <div class="uk-margin-small">
+                    <label class="uk-form-label">Epsilon</label>
+                    <div class="uk-form-controls">
+                      <input class="uk-input uk-form-small" type="number" placeholder="0.001" step="0.01">
+                    </div>
+                  </div>
+                </form>
               </div>
-            </div>
+            </li>
 
-            <div class="uk-margin">
-              <div class="uk-form-label">Radio</div>
-              <div class="uk-form-controls">
-                <label><input class="uk-radio" type="radio" name="radio1"> Option 01</label><br>
-                <label><input class="uk-radio" type="radio" name="radio1"> Option 02</label>
+            <li class="uk-open">
+              <a class="uk-accordion-title" href="#">Configuration</a>
+              <div class="uk-margin-small-top uk-accordion-content">
+                <div class="uk-grid-small uk-child-width-expand@s uk-text-center" uk-grid>
+                  <div>
+                    <button class="uk-button  uk-width-1-1  uk-button-default uk-button-small">1</button>
+                  </div>
+                  <div>
+                    <button class="uk-button  uk-width-1-1  uk-button-default uk-button-small">2</button>
+                  </div>
+                  <div>
+                    <button class="uk-button  uk-width-1-1  uk-button-default uk-button-small">3</button>
+                  </div>
+                  <div>
+                    <button class="uk-button  uk-width-1-1  uk-button-default uk-button-small">4</button>
+                  </div>
+                </div>
+                <div class="uk-grid-small uk-child-width-expand@s uk-text-center" uk-grid>
+                  <div>
+                    <button class="uk-button  uk-width-1-1  uk-button-default uk-button-small">5</button>
+                  </div>
+                  <div>
+                    <button class="uk-button  uk-width-1-1  uk-button-default uk-button-small">6</button>
+                  </div>
+                  <div>
+                    <button class="uk-button  uk-width-1-1  uk-button-default uk-button-small">7</button>
+                  </div>
+                  <div>
+                    <button class="uk-button  uk-width-1-1  uk-button-default uk-button-small">8</button>
+                  </div>
+                </div>
               </div>
-            </div>
+            </li>
 
-          </form>
+          </ul>
+
+
+
         </div>
       </div>
 
