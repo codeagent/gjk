@@ -1,4 +1,4 @@
 export interface ViewportInterface {
-  pause(): void;
-  resume(): void;
+  connect(canvas: HTMLCanvasElement): void;
+  disconnect(canvas: HTMLCanvasElement): void;
 }
