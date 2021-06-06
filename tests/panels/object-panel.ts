@@ -1,6 +1,6 @@
 import { vec3 } from 'gl-matrix';
 import { BehaviorSubject, fromEvent, merge, Subject } from 'rxjs';
-import { distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
+import { map, takeUntil } from 'rxjs/operators';
 
 export interface ObjectPanelOptions {
   objectType: 'sphere' | 'box' | 'cylinder' | 'cone' | 'hull1' | 'hull2';

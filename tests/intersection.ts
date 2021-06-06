@@ -1,5 +1,5 @@
 import { fromEvent } from 'rxjs';
-import { map, filter } from 'rxjs/operators';
+import { map, filter, bufferTime } from 'rxjs/operators';
 import { mat3, quat, vec3, vec4 } from 'gl-matrix';
 
 import { ViewportInterface } from './viewport.interface';
@@ -40,7 +40,8 @@ import {
   ShapeInterface,
   Sphere
 } from '../shape';
-import { ObjectPanel } from './panels/object-panel';
+import { ObjectPanel, GjkPanel } from './panels';
+import { BehaviorSubject } from 'rxjs/dist/types';
 
 export default class Viewport implements ViewportInterface {
   private renderer: Renderer;
@@ -50,6 +51,7 @@ export default class Viewport implements ViewportInterface {
   private axes2: AxesController;
   private object1Panel: ObjectPanel;
   private object2Panel: ObjectPanel;
+  private gjkPanel: GjkPanel;
   private cameraController: ArcRotationCameraController;
   private drawables: Drawable[] = [];
   private geometries = new Map<string, Geometry>();
@@ -57,6 +59,8 @@ export default class Viewport implements ViewportInterface {
   private shape2: ShapeInterface;
   private connected = false;
   private simplex = new Set<gjk.SupportPoint>();
+  private dt = 0;
+  private dt$ = new BehaviorSubject(0);
 
   connect(canvas: HTMLCanvasElement): void {
     if (!this.renderer) {
@@ -153,6 +157,13 @@ export default class Viewport implements ViewportInterface {
           )
         )
         .subscribe(mode => (this.axes1.mode = this.axes2.mode = mode));
+
+      this.dt$
+        .pipe(
+          bufferTime(250),
+          map(v => v.reduce((acc, e) => acc + e / v.length))
+        )
+        .subscribe(e => (this.dt = e));
     }
 
     this.connected = true;
@@ -173,6 +184,12 @@ export default class Viewport implements ViewportInterface {
         orientation: vec3.fromValues(0.0, 0.0, 0.0)
       }
     );
+    this.gjkPanel = new GjkPanel(document.getElementById('gjk-panel'), {
+      time: 0.0,
+      simplexSize: 0,
+      maxIterations: 25,
+      epsilon: 0.001
+    });
 
     this.object1Panel.onChanges().subscribe(e => {
       this.drawables[1].transform.position = e.position;
@@ -185,7 +202,6 @@ export default class Viewport implements ViewportInterface {
       this.drawables[1].geometry = this.geometries.get(e.objectType);
       this.shape1 = this.createShape(e.objectType, this.drawables[1].transform);
     });
-
     this.object2Panel.onChanges().subscribe(e => {
       this.drawables[2].transform.position = e.position;
       this.drawables[2].transform.rotation = quat.fromEuler(
@@ -196,6 +212,13 @@ export default class Viewport implements ViewportInterface {
       );
       this.drawables[2].geometry = this.geometries.get(e.objectType);
       this.shape2 = this.createShape(e.objectType, this.drawables[2].transform);
+    });
+
+    this.gjkPanel = new GjkPanel(document.getElementById('gjk-panel'), {
+      time: 0.0,
+      simplexSize: 0,
+      maxIterations: 25,
+      epsilon: 0.001
     });
   }
 
@@ -213,6 +236,7 @@ export default class Viewport implements ViewportInterface {
     this.connected = false;
     this.object1Panel.release();
     this.object2Panel.release();
+    this.gjkPanel.release();
   }
 
   private draw() {
@@ -253,15 +277,26 @@ export default class Viewport implements ViewportInterface {
 
       // todo: rotation
     });
+
+    this.gjkPanel.write({
+      ...this.gjkPanel.state,
+      simplexSize: this.simplex.size,
+      time: this.dt
+    });
   }
 
   private test() {
     this.simplex.clear();
+    const t = performance.now();
     const areIntersect = gjk.areIntersect(
       this.shape1,
       this.shape2,
-      this.simplex
+      this.simplex,
+      this.gjkPanel.state.epsilon,
+      this.gjkPanel.state.maxIterations
     );
+    this.dt$.next(performance.now() - t);
+
     this.drawables[1].material.uniforms[
       'albedo'
     ] = this.drawables[2].material.uniforms['albedo'] = areIntersect
