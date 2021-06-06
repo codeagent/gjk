@@ -341,6 +341,10 @@ export class Renderer {
     this._gl.deleteVertexArray(geometry.vao);
   }
 
+  destroyRenderTarget(target: RenderTarget) {
+    this._gl.deleteFramebuffer(target);
+  }
+
   readAsIdMap() {
     const data = new Uint16Array(this._gl.canvas.width * this._gl.canvas.height);
     this._gl.readPixels(

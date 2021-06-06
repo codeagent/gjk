@@ -20,6 +20,10 @@ export class ObjectPanel {
   private ry: HTMLInputElement;
   private rz: HTMLInputElement;
 
+  get state() {
+    return this.state$.value;
+  }
+
   constructor(
     readonly element: HTMLElement,
     readonly options: ObjectPanelOptions

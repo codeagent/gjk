@@ -1,15 +1,13 @@
 <div class="uk-container uk-container-large uk-margin-small-top">
 
-  <ul uk-switcher="connect: #sidebar; animation: uk-animation-fade" uk-tab>
-    <li class="uk-active"><a href="#">Intersection</a></li>
-    <li><a href="#">Closests points</a></li>
-    <li><a href="#">Subdivisions</a></li>
+  <ul id="tabs" uk-switcher="connect: #sidebar; animation: uk-animation-fade" uk-tab>
+    <li class="uk-active"><a href="#/intersection">Intersection</a></li>
+    <li><a href="#/closests">Closests points</a></li>
+    <li><a href="#/subdivisions">Subdivisions</a></li>
   </ul>
 
   <div class="uk-grid-collapse" uk-grid>
     <div class="uk-width-5-6">
-      <label id="distance"></label>
-      <br/>
       <canvas id="canvas" width="1120" height="750"></canvas>
     </div>
     <div class="uk-width-1-6">

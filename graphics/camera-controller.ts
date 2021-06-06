@@ -39,7 +39,7 @@ export class ArcRotationCameraController {
 
   constructor(
     private canvas: HTMLCanvasElement,
-    private camera: Camera,
+    public readonly camera: Camera,
     private lookAt: vec3 = [0.0, 0.0, 0.0],
     private rotSpeed = 1.0e-2,
     private moveSpeed = 0.25
