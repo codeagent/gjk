@@ -1,6 +1,6 @@
-import { fromEvent } from 'rxjs';
+import { fromEvent, BehaviorSubject } from 'rxjs';
 import { map, filter, bufferTime } from 'rxjs/operators';
-import { mat3, quat, vec3, vec4 } from 'gl-matrix';
+import { quat, vec3, vec4 } from 'gl-matrix';
 
 import { ViewportInterface } from './viewport.interface';
 
@@ -14,7 +14,8 @@ import {
   MeshCollection,
   Renderer,
   RenderTarget,
-  Transform
+  Transform,
+  AxesController
 } from '../graphics';
 
 import {
@@ -29,7 +30,6 @@ import {
 
 import objects from '../objects/objects.obj';
 
-import { AxesController } from '../graphics/gizmos/axes-controller';
 import { gjk } from '../gjk';
 import { getPositions } from '../mesh';
 import {
@@ -41,7 +41,6 @@ import {
   Sphere
 } from '../shape';
 import { ObjectPanel, GjkPanel } from './panels';
-import { BehaviorSubject } from 'rxjs/dist/types';
 
 export default class Viewport implements ViewportInterface {
   private renderer: Renderer;
@@ -60,7 +59,7 @@ export default class Viewport implements ViewportInterface {
   private connected = false;
   private simplex = new Set<gjk.SupportPoint>();
   private dt = 0;
-  private dt$ = new BehaviorSubject(0);
+  private dt$ = new BehaviorSubject<number>(0);
 
   connect(canvas: HTMLCanvasElement): void {
     if (!this.renderer) {

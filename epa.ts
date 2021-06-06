@@ -532,29 +532,6 @@ export namespace epa {
     last.siblings[1] = first;
   };
 
-  // export class MinkowskiDifference {
-  //   private opposite = vec3.create();
-
-  //   constructor(
-  //     public readonly shape0: gjk.ShapeInterface,
-  //     public readonly shape1: gjk.ShapeInterface
-  //   ) {}
-
-  //   support(dir: vec3): gjk.SupportPoint {
-  //     vec3.negate(this.opposite, dir);
-
-  //     const support0 = vec3.create();
-  //     const support1 = vec3.create();
-  //     const diff = vec3.create();
-
-  //     this.shape0.support(support0, dir);
-  //     this.shape1.support(support1, this.opposite);
-  //     vec3.subtract(diff, support0, support1);
-
-  //     return { support0, support1, diff };
-  //   }
-  // }
-
   export const penetrationDepth = (
     shape0: gjk.ShapeInterface,
     shape1: gjk.ShapeInterface,
