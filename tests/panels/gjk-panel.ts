@@ -58,8 +58,8 @@ export class GjkPanel {
   write(options: GjkPanelOptions) {
     this.time.innerText = `${options.time.toPrecision(2)} s`;
     this.size.innerText = `${options.simplexSize}`;
-    this.iterations.value = `${options.maxIterations}`;
-    this.epsilon.value = `${options.epsilon}`;
+    this.iterations.setAttribute('value', `${options.maxIterations}`);
+    this.epsilon.setAttribute('value', `${options.epsilon}`);
   }
 
   onChanges() {

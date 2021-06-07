@@ -41,6 +41,7 @@ import {
   Sphere
 } from '../shape';
 import { ObjectPanel, GjkPanel } from './panels';
+import { createShape, toEuler } from './tools';
 
 export default class Viewport implements ViewportInterface {
   private renderer: Renderer;
@@ -191,26 +192,34 @@ export default class Viewport implements ViewportInterface {
     });
 
     this.object1Panel.onChanges().subscribe(e => {
-      this.drawables[1].transform.position = e.position;
       this.drawables[1].transform.rotation = quat.fromEuler(
         quat.create(),
         e.orientation[0],
         e.orientation[1],
         e.orientation[2]
       );
+      this.drawables[1].transform.position = e.position;
       this.drawables[1].geometry = this.geometries.get(e.objectType);
-      this.shape1 = this.createShape(e.objectType, this.drawables[1].transform);
+      this.shape1 = createShape(
+        e.objectType,
+        this.drawables[1].transform,
+        this.meshes
+      );
     });
     this.object2Panel.onChanges().subscribe(e => {
-      this.drawables[2].transform.position = e.position;
       this.drawables[2].transform.rotation = quat.fromEuler(
         quat.create(),
         e.orientation[0],
         e.orientation[1],
         e.orientation[2]
       );
+      this.drawables[2].transform.position = e.position;
       this.drawables[2].geometry = this.geometries.get(e.objectType);
-      this.shape2 = this.createShape(e.objectType, this.drawables[2].transform);
+      this.shape2 = createShape(
+        e.objectType,
+        this.drawables[2].transform,
+        this.meshes
+      );
     });
 
     this.gjkPanel = new GjkPanel(document.getElementById('gjk-panel'), {
@@ -265,18 +274,14 @@ export default class Viewport implements ViewportInterface {
 
     this.object1Panel.write({
       ...this.object1Panel.state,
-      position: this.drawables[1].transform.position
-
-      // todo: rotation
+      position: this.axes1.targetTransform.position,
+      orientation: toEuler(this.axes1.targetTransform.rotation)
     });
-
     this.object2Panel.write({
       ...this.object2Panel.state,
-      position: this.drawables[2].transform.position
-
-      // todo: rotation
+      position: this.axes2.targetTransform.position,
+      orientation: toEuler(this.axes2.targetTransform.rotation)
     });
-
     this.gjkPanel.write({
       ...this.gjkPanel.state,
       simplexSize: this.simplex.size,
@@ -301,21 +306,5 @@ export default class Viewport implements ViewportInterface {
     ] = this.drawables[2].material.uniforms['albedo'] = areIntersect
       ? vec4.fromValues(1.0, 1.0, 0.2, 1.0)
       : vec4.fromValues(0.0, 0.2, 1.0, 1.0);
-  }
-
-  private createShape(type: string, transform: Transform) {
-    if (type === 'hull1') {
-      return new Polyhedra(getPositions(this.meshes['hull1']), transform);
-    } else if (type === 'hull2') {
-      return new Polyhedra(getPositions(this.meshes['hull2']), transform);
-    } else if (type === 'box') {
-      return new Box(vec3.fromValues(0.5, 0.5, 0.5), transform);
-    } else if (type === 'cylinder') {
-      return new Cylinder(2.0, 1.0, transform);
-    } else if (type === 'cone') {
-      return new Cone(2.0, 1.0, transform);
-    } else {
-      return new Sphere(1.0, transform);
-    }
   }
 }

@@ -1,6 +1,6 @@
-import { vec3 } from 'gl-matrix';
+import { glMatrix, quat, vec3 } from 'gl-matrix';
 import { BehaviorSubject, fromEvent, merge, Subject } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
+import { delay, map, takeUntil } from 'rxjs/operators';
 
 export interface ObjectPanelOptions {
   objectType: 'sphere' | 'box' | 'cylinder' | 'cone' | 'hull1' | 'hull2';
@@ -20,7 +20,7 @@ export class ObjectPanel {
   private ry: HTMLInputElement;
   private rz: HTMLInputElement;
 
-  get state() {
+  get state(): ObjectPanelOptions {
     return this.state$.value;
   }
 
@@ -55,7 +55,11 @@ export class ObjectPanel {
       ).pipe(
         map(() => ({
           ...this.state$.value,
-          position: vec3.fromValues(+this.x.value, +this.y.value, +this.z.value)
+          position: vec3.fromValues(
+            round(+this.x.value),
+            round(+this.y.value),
+            round(+this.z.value)
+          )
         }))
       ),
 
@@ -67,9 +71,9 @@ export class ObjectPanel {
         map(() => ({
           ...this.state$.value,
           orientation: vec3.fromValues(
-            +this.rx.value,
-            +this.ry.value,
-            +this.rz.value
+            round(+this.rx.value),
+            round(+this.ry.value),
+            round(+this.rz.value)
           )
         }))
       )
@@ -80,12 +84,12 @@ export class ObjectPanel {
 
   write(options: ObjectPanelOptions) {
     this.type.value = options.objectType;
-    this.x.value = `${options.position[0]}`;
-    this.y.value = `${options.position[1]}`;
-    this.z.value = `${options.position[2]}`;
-    this.rx.value = `${options.orientation[0]}`;
-    this.ry.value = `${options.orientation[1]}`;
-    this.rz.value = `${options.orientation[2]}`;
+    this.x.setAttribute('value', options.position[0].toFixed(2));
+    this.y.setAttribute('value', options.position[1].toFixed(2));
+    this.z.setAttribute('value', options.position[2].toFixed(2));
+    this.rx.setAttribute('value', options.orientation[0].toFixed(2));
+    this.ry.setAttribute('value', options.orientation[1].toFixed(2));
+    this.rz.setAttribute('value', options.orientation[2].toFixed(2));
   }
 
   onChanges() {
@@ -96,3 +100,5 @@ export class ObjectPanel {
     this.release$.next();
   }
 }
+
+const round = (v: number, p = 2) => +v.toPrecision(p);
