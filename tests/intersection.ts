@@ -1,5 +1,5 @@
-import { fromEvent, BehaviorSubject } from 'rxjs';
-import { map, filter, bufferTime } from 'rxjs/operators';
+import { fromEvent, BehaviorSubject, Subject } from 'rxjs';
+import { map, filter, bufferTime, takeUntil } from 'rxjs/operators';
 import { quat, vec3, vec4 } from 'gl-matrix';
 
 import { ViewportInterface } from './viewport.interface';
@@ -31,19 +31,11 @@ import {
 import objects from '../objects/objects.obj';
 
 import { gjk } from '../gjk';
-import { getPositions } from '../mesh';
-import {
-  Box,
-  Cone,
-  Cylinder,
-  Polyhedra,
-  ShapeInterface,
-  Sphere
-} from '../shape';
+import { ShapeInterface } from '../shape';
 import { ObjectPanel, GjkPanel } from './panels';
 import { createShape, toEuler } from './tools';
 
-export default class Viewport implements ViewportInterface {
+export default class implements ViewportInterface {
   private renderer: Renderer;
   private meshes: MeshCollection;
   private idFrameBuffer: RenderTarget;
@@ -61,113 +53,14 @@ export default class Viewport implements ViewportInterface {
   private simplex = new Set<gjk.SupportPoint>();
   private dt = 0;
   private dt$ = new BehaviorSubject<number>(0);
+  private release$ = new Subject();
 
   connect(canvas: HTMLCanvasElement): void {
     if (!this.renderer) {
-      this.renderer = new Renderer(
-        canvas.getContext('webgl2', {
-          preserveDrawingBuffer: true
-        })
-      );
-
-      this.meshes = loadObj(objects);
-      const phongShader = this.renderer.createShader(
-        phongVertex,
-        phongFragment
-      );
-      const flatShader = this.renderer.createShader(flatVertex, flatFragment);
-      const gridGeometry = this.renderer.createGeometry(
-        createGrid(),
-        WebGL2RenderingContext.LINES
-      );
-      const camera = new Camera(
-        45.0,
-        canvas.width / canvas.height,
-        0.25,
-        100.0
-      );
-      camera.position = [5.0, 5.0, 5.0];
-
-      //
-      this.idFrameBuffer = this.renderer.createIdRenderTarget();
-      this.cameraController = new ArcRotationCameraController(canvas, camera);
-      for (let type of [
-        'sphere',
-        'box',
-        'cylinder',
-        'cone',
-        'hull1',
-        'hull2'
-      ]) {
-        this.geometries.set(
-          type,
-          this.renderer.createGeometry(this.meshes[type])
-        );
-      }
-      this.drawables = [
-        {
-          material: {
-            shader: flatShader,
-            uniforms: { albedo: vec4.fromValues(0.0, 0.0, 0.0, 1.0) },
-            state: {}
-          },
-          geometry: gridGeometry,
-          transform: new Transform()
-        },
-        {
-          material: {
-            shader: phongShader,
-            uniforms: {
-              albedo: vec4.fromValues(1.0, 0.2, 0.0, 1.0)
-            },
-            state: { cullFace: false }
-          },
-          geometry: this.geometries.get('box'),
-          transform: new Transform()
-        },
-        {
-          material: {
-            shader: phongShader,
-            uniforms: {
-              albedo: vec4.fromValues(0.0, 0.2, 1.0, 1.0)
-            },
-            state: { cullFace: false }
-          },
-          geometry: this.geometries.get('box'),
-          transform: new Transform(vec3.fromValues(4.0, 2.0, -4.0))
-        }
-      ];
-      this.axes1 = new AxesController(
-        this.renderer,
-        camera,
-        this.drawables[1].transform
-      );
-      this.axes2 = new AxesController(
-        this.renderer,
-        camera,
-        this.drawables[2].transform
-      );
-
-      fromEvent(document, 'keydown')
-        .pipe(
-          filter((e: KeyboardEvent) => ['q', 'w', 'e'].includes(e.key)),
-          map(
-            (e: KeyboardEvent) =>
-              ({ q: 'none', w: 'movement', e: 'rotation' }[e.key])
-          )
-        )
-        .subscribe(mode => (this.axes1.mode = this.axes2.mode = mode));
-
-      this.dt$
-        .pipe(
-          bufferTime(250),
-          map(v => v.reduce((acc, e) => acc + e / v.length))
-        )
-        .subscribe(e => (this.dt = e));
+      this.boostrap(canvas);
     }
 
     this.connected = true;
-
     this.object1Panel = new ObjectPanel(
       document.getElementById('object-1-panel'),
       {
@@ -192,13 +85,13 @@ export default class Viewport implements ViewportInterface {
     });
 
     this.object1Panel.onChanges().subscribe(e => {
+      this.drawables[1].transform.position = e.position;
       this.drawables[1].transform.rotation = quat.fromEuler(
         quat.create(),
         e.orientation[0],
         e.orientation[1],
         e.orientation[2]
       );
-      this.drawables[1].transform.position = e.position;
       this.drawables[1].geometry = this.geometries.get(e.objectType);
       this.shape1 = createShape(
         e.objectType,
@@ -207,13 +100,13 @@ export default class Viewport implements ViewportInterface {
       );
     });
     this.object2Panel.onChanges().subscribe(e => {
+      this.drawables[2].transform.position = e.position;
       this.drawables[2].transform.rotation = quat.fromEuler(
         quat.create(),
         e.orientation[0],
         e.orientation[1],
         e.orientation[2]
       );
-      this.drawables[2].transform.position = e.position;
       this.drawables[2].geometry = this.geometries.get(e.objectType);
       this.shape2 = createShape(
         e.objectType,
@@ -242,6 +135,7 @@ export default class Viewport implements ViewportInterface {
 
   disconnect(): void {
     this.connected = false;
+    this.release$.next();
     this.object1Panel.release();
     this.object2Panel.release();
     this.gjkPanel.release();
@@ -306,5 +200,94 @@ export default class Viewport implements ViewportInterface {
     ] = this.drawables[2].material.uniforms['albedo'] = areIntersect
       ? vec4.fromValues(1.0, 1.0, 0.2, 1.0)
       : vec4.fromValues(0.0, 0.2, 1.0, 1.0);
+  }
+
+  private boostrap(canvas: HTMLCanvasElement) {
+    this.renderer = new Renderer(
+      canvas.getContext('webgl2', {
+        preserveDrawingBuffer: true
+      })
+    );
+
+    this.meshes = loadObj(objects);
+    const phongShader = this.renderer.createShader(phongVertex, phongFragment);
+    const flatShader = this.renderer.createShader(flatVertex, flatFragment);
+    const gridGeometry = this.renderer.createGeometry(
+      createGrid(),
+      WebGL2RenderingContext.LINES
+    );
+    const camera = new Camera(45.0, canvas.width / canvas.height, 0.25, 100.0);
+    camera.position = [5.0, 5.0, 5.0];
+
+    //
+    this.idFrameBuffer = this.renderer.createIdRenderTarget();
+    this.cameraController = new ArcRotationCameraController(canvas, camera);
+    for (let type of ['sphere', 'box', 'cylinder', 'cone', 'hull1', 'hull2']) {
+      this.geometries.set(
+        type,
+        this.renderer.createGeometry(this.meshes[type])
+      );
+    }
+    this.drawables = [
+      {
+        material: {
+          shader: flatShader,
+          uniforms: { albedo: vec4.fromValues(0.0, 0.0, 0.0, 1.0) },
+          state: {}
+        },
+        geometry: gridGeometry,
+        transform: new Transform()
+      },
+      {
+        material: {
+          shader: phongShader,
+          uniforms: {
+            albedo: vec4.fromValues(1.0, 0.2, 0.0, 1.0)
+          },
+          state: { cullFace: false }
+        },
+        geometry: this.geometries.get('box'),
+        transform: new Transform()
+      },
+      {
+        material: {
+          shader: phongShader,
+          uniforms: {
+            albedo: vec4.fromValues(0.0, 0.2, 1.0, 1.0)
+          },
+          state: { cullFace: false }
+        },
+        geometry: this.geometries.get('box'),
+        transform: new Transform(vec3.fromValues(4.0, 2.0, -4.0))
+      }
+    ];
+    this.axes1 = new AxesController(
+      this.renderer,
+      camera,
+      this.drawables[1].transform
+    );
+    this.axes2 = new AxesController(
+      this.renderer,
+      camera,
+      this.drawables[2].transform
+    );
+
+    fromEvent(document, 'keydown')
+      .pipe(
+        filter((e: KeyboardEvent) => ['q', 'w', 'e'].includes(e.key)),
+        map(
+          (e: KeyboardEvent) =>
+            ({ q: 'none', w: 'movement', e: 'rotation' }[e.key])
+        )
+      )
+      .subscribe(mode => (this.axes1.mode = this.axes2.mode = mode));
+
+    this.dt$
+      .pipe(
+        takeUntil(this.release$),
+        bufferTime(250),
+        map(v => v.reduce((acc, e) => acc + e / v.length))
+      )
+      .subscribe(e => (this.dt = e));
   }
 }

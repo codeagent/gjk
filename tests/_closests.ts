@@ -9,24 +9,29 @@ import {
   loadObj,
   Renderer,
   Transform
-} from '../../graphics';
+} from '../graphics';
 
 import {
   vertex as phongVertex,
   fragment as phongFragment
-} from '../../shaders/phong';
+} from '../shaders/phong';
 
 import {
   vertex as flatVertex,
   fragment as flatFragment
-} from '../../shaders/flat';
+} from '../shaders/flat';
 
-import objects from '../../objects/objects.obj';
+import objects from '../objects/objects.obj';
 
-import { AxesController } from '../../graphics/gizmos/axes-controller';
-import { gjk } from '../../gjk';
-import { getPositions } from '../../mesh';
-import { Box, Cone, Cylinder, Polyhedra, Sphere } from '../../shape';
+import { AxesController } from '../graphics/gizmos/axes-controller';
+import { gjk } from '../gjk';
+import {
+  createSegment,
+  createTetra,
+  createTriangle,
+  getPositions
+} from '../mesh';
+import { Box, Cone, Cylinder, Polyhedra, Sphere } from '../shape';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 
@@ -39,12 +44,14 @@ const phongShader = renderer.createShader(phongVertex, phongFragment);
 const flatShader = renderer.createShader(flatVertex, flatFragment);
 const meshes = loadObj(objects);
 
-const object0 = renderer.createGeometry(meshes['hull1']);
-const object1 = renderer.createGeometry(meshes['hull2']);
+const object0 = renderer.createGeometry(meshes['object1']);
+const object1 = renderer.createGeometry(meshes['object2']);
+
 const gridGeometry = renderer.createGeometry(
   createGrid(),
   WebGL2RenderingContext.LINES
 );
+const icoGeometry = renderer.createGeometry(meshes['sphere']);
 
 const camera = new Camera(45.0, canvas.width / canvas.height, 0.25, 100.0);
 camera.position = [5.0, 5.0, 5.0];
@@ -81,6 +88,36 @@ const drawables = [
     },
     geometry: object1,
     transform: new Transform(vec3.fromValues(4.0, 2.0, -4.0))
+  },
+
+  // closests
+  {
+    material: {
+      shader: phongShader,
+      uniforms: {
+        albedo: vec4.fromValues(1.0, 0.2, 1.0, 1.0)
+      },
+      state: { cullFace: false }
+    },
+    geometry: icoGeometry,
+    transform: new Transform(
+      vec3.fromValues(0.0, 0.0, 0.0),
+      vec3.fromValues(0.1, 0.1, 0.1)
+    )
+  },
+  {
+    material: {
+      shader: phongShader,
+      uniforms: {
+        albedo: vec4.fromValues(1.0, 0.2, 1.0, 1.0)
+      },
+      state: { cullFace: false }
+    },
+    geometry: icoGeometry,
+    transform: new Transform(
+      vec3.fromValues(0.0, 0.0, 0.0),
+      vec3.fromValues(0.1, 0.1, 0.1)
+    )
   }
 ];
 
@@ -97,11 +134,11 @@ fromEvent(document, 'keydown')
   .subscribe(mode => (axes0.mode = axes1.mode = mode));
 
 const shape0 = new Polyhedra(
-  getPositions(meshes['hull1']),
+  getPositions(meshes['object1']),
   axes0.targetTransform
 );
 const shape1 = new Polyhedra(
-  getPositions(meshes['hull2']),
+  getPositions(meshes['object2']),
   axes1.targetTransform
 );
 // const shape0 = new Box(vec3.fromValues(0.5, 0.5, 0.5), axes0.targetTransform);
@@ -114,8 +151,6 @@ const shape1 = new Polyhedra(
 // const shape1 = new Sphere(1.0, axes1.targetTransform);
 
 // Loop
-const simplex = new Set<gjk.SupportPoint>();
-
 const draw = () => {
   cameraController.update();
   renderer.setRenderTarget(null);
@@ -138,15 +173,17 @@ const draw = () => {
   axes1.update(pixes);
 
   //
-  simplex.clear();
-  const areIntersect = gjk.areIntersect(shape0, shape1, simplex);
-  document.getElementById('distance').innerHTML = `${areIntersect}`;
+  const closestPoints: [vec3, vec3] = [vec3.create(), vec3.create()];
+  const distance = gjk.closestPoints(shape0, shape1, closestPoints);
 
-  drawables[1].material.uniforms['albedo'] = drawables[2].material.uniforms[
-    'albedo'
-  ] = areIntersect
-    ? vec4.fromValues(1.0, 1.0, 0.2, 1.0)
-    : vec4.fromValues(0.0, 0.2, 1.0, 1.0);
+  if (distance) {
+    drawables[3].transform.position = closestPoints[0];
+    drawables[4].transform.position = closestPoints[1];
+  } else {
+    drawables[3].transform.position = drawables[4].transform.position = vec3.create();
+  }
+
+  document.getElementById('distance').innerHTML = `${distance}`;
 
   requestAnimationFrame(draw);
 };

@@ -3,7 +3,7 @@ import 'uikit/dist/js/uikit.js';
 
 import { fromEvent, merge, of } from 'rxjs';
 import { distinctUntilChanged, filter, mapTo } from 'rxjs/operators';
-import IntersectionTest from './tests/intersection';
+import { IntersectionTest, ClosestsTest } from './tests';
 import { ViewportInterface } from './tests/viewport.interface';
 // import './jasmine';
 
@@ -14,7 +14,7 @@ import { ViewportInterface } from './tests/viewport.interface';
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 let active: ViewportInterface = null;
 const intersectionTest = new IntersectionTest();
-const closestsTest = null;
+const closestsTest = new ClosestsTest();
 const subdivisionTest = null;
 const depthTest = null;
 
