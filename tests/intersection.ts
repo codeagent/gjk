@@ -194,10 +194,13 @@ export default class implements ViewportInterface {
   private test() {
     this.simplex.clear();
     const t = performance.now();
+    const dir = vec3.create();
+    vec3.subtract(dir, this.shape1.origin, this.shape2.origin);
     const areIntersect = gjk.areIntersect(
+      this.simplex,
       this.shape1,
       this.shape2,
-      this.simplex,
+      dir,
       this.gjkPanel.state.epsilon,
       this.gjkPanel.state.maxIterations
     );

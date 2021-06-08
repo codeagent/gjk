@@ -197,10 +197,14 @@ export default class implements ViewportInterface {
     this.simplex.clear();
     const t = performance.now();
 
+    const dir = vec3.create();
+    vec3.subtract(dir, this.shape1.origin, this.shape2.origin);
     const distance = gjk.closestPoints(
+      this.simplex,
+      this.closestPoints,
       this.shape1,
       this.shape2,
-      this.closestPoints,
+      dir,
       this.gjkPanel.state.epsilon,
       this.gjkPanel.state.maxIterations
     );
