@@ -30,8 +30,7 @@ import {
 
 import objects from '../objects/objects.obj';
 
-import { gjk } from '../gjk';
-import { ShapeInterface } from '../shape';
+import { closestPoints, SupportPoint, ShapeInterface } from '../src';
 import { ObjectPanel, GjkPanel } from './panels';
 import { createShape, toEuler } from './tools';
 
@@ -50,7 +49,7 @@ export default class implements ViewportInterface {
   private shape1: ShapeInterface;
   private shape2: ShapeInterface;
   private connected = false;
-  private simplex = new Set<gjk.SupportPoint>();
+  private simplex = new Set<SupportPoint>();
   private dt = 0;
   private dt$ = new BehaviorSubject<number>(0);
   private release$ = new Subject();
@@ -193,7 +192,7 @@ export default class implements ViewportInterface {
 
     const dir = vec3.create();
     vec3.subtract(dir, this.shape1.origin, this.shape2.origin);
-    const distance = gjk.closestPoints(
+    const distance = closestPoints(
       this.simplex,
       this.closestPoints,
       this.shape1,
