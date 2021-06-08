@@ -44,7 +44,7 @@ export default class implements ViewportInterface {
   private shapePanel: ObjectPanel;
   private cameraController: ArcRotationCameraController;
   private drawables: Drawable[] = [];
-  private geometries = new Map<string, Geometry>();
+  private shapeTransform = new Transform(vec3.fromValues(-0.25, -0.25, -0.25));
   private shape: ShapeInterface;
   private connected = false;
   private polytop: epa.Polytop;
@@ -60,43 +60,24 @@ export default class implements ViewportInterface {
     this.shapePanel = new ObjectPanel(
       document.getElementById('object-1-panel'),
       {
-        objectType: 'box',
-        position: vec3.fromValues(0.0, 0.0, 0.0),
+        objectType: 'sphere',
+        position: this.shapeTransform.position,
         orientation: vec3.fromValues(0.0, 0.0, 0.0)
       }
     );
     this.shapePanel.onChanges().subscribe(e => {
-      this.drawables[1].transform.position = e.position;
-      this.drawables[1].transform.rotation = quat.fromEuler(
+      this.shapeTransform.position = e.position;
+      this.shapeTransform.rotation = quat.fromEuler(
         quat.create(),
         e.orientation[0],
         e.orientation[1],
         e.orientation[2]
       );
 
-      this.shape = createShape(
-        e.objectType,
-        this.drawables[1].transform,
-        this.meshes
-      );
+      this.shape = createShape(e.objectType, this.shapeTransform, this.meshes);
 
-      this.createPolytop();
-
-      this.drawables[1].geometry = this.renderer.createGeometry(
-        createMeshFromPolytop(this.polytop, false)
-      );
+      this.subdivide();
     });
-
-    fromEvent(document, 'keydown')
-      .pipe(
-        takeUntil(this.release$),
-        filter((e: KeyboardEvent) => ['s'].includes(e.key))
-      )
-      .subscribe(() => {
-        const t = performance.now();
-        this.subdivide();
-        this.dt = performance.now() - t;
-      });
   }
 
   frame(): void {
@@ -163,16 +144,10 @@ export default class implements ViewportInterface {
     //
     this.idFrameBuffer = this.renderer.createIdRenderTarget();
     this.cameraController = new ArcRotationCameraController(canvas, camera);
-    for (let type of ['sphere', 'box', 'cylinder', 'cone', 'hull1', 'hull2']) {
-      this.geometries.set(
-        type,
-        this.renderer.createGeometry(this.meshes[type])
-      );
-    }
 
-    const shapeTransform = new Transform();
-    this.shape = createShape('sphere', shapeTransform, this.meshes);
+    this.shape = createShape('sphere', this.shapeTransform, this.meshes);
     this.polytop = this.createPolytop();
+
     this.drawables = [
       {
         material: {
@@ -194,10 +169,14 @@ export default class implements ViewportInterface {
         geometry: this.renderer.createGeometry(
           createMeshFromPolytop(this.polytop, false)
         ),
-        transform: shapeTransform
+        transform: new Transform()
       }
     ];
-    this.axes = new AxesController(this.renderer, camera, shapeTransform);
+
+    this.axes = new AxesController(this.renderer, camera, this.shapeTransform);
+    this.axes.action$.subscribe(() => {
+      this.subdivide();
+    });
 
     fromEvent(document, 'keydown')
       .pipe(
@@ -222,8 +201,11 @@ export default class implements ViewportInterface {
     return epa.createHexahedronFromLineSegment(w0, w1, this.shape);
   }
 
-  private subdivide() {
-    epa.subdivide(this.polytop, this.shape);
+  private subdivide(times = 64) {
+    this.polytop = this.createPolytop();
+    while (times-- >= 0) {
+      epa.subdivide(this.polytop, this.shape);
+    }
     this.renderer.destroyGeometry(this.drawables[1].geometry);
     this.drawables[1].geometry = this.renderer.createGeometry(
       createMeshFromPolytop(this.polytop, false)

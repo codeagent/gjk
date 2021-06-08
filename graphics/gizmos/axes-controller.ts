@@ -1,5 +1,5 @@
 import { mat3, mat4, quat, vec2, vec3, vec4 } from 'gl-matrix';
-import { fromEvent, Subject } from 'rxjs';
+import { fromEvent, Subject, merge } from 'rxjs';
 import { filter, map, takeUntil } from 'rxjs/operators';
 
 import { Drawable, Material, Renderer, Shader } from '../renderer';
@@ -50,6 +50,10 @@ class BaseController {
     this._scaling = scaling;
   }
 
+  get action$() {
+    return this._action$.asObservable();
+  }
+
   protected idMaterial: Material;
   protected release$ = new Subject();
   protected cursor = vec2.create();
@@ -57,6 +61,7 @@ class BaseController {
   protected active = false;
   protected _hover = false;
   protected _scaling = vec3.fromValues(1.0, 1.0, 1.0);
+  private _action$ = new Subject();
 
   constructor(
     protected renderer: Renderer,
@@ -155,7 +160,9 @@ class BaseController {
     this.cursor = coords;
   }
 
-  protected doAction() {}
+  protected doAction() {
+    this._action$.next();
+  }
 }
 
 export class AxisController extends BaseController {
@@ -198,6 +205,7 @@ export class AxisController extends BaseController {
     const position = this.closestPoint(this.cursor);
     vec3.subtract(position, position, this.offset);
     this.targetTransform.position = position;
+    super.doAction();
   }
 }
 
@@ -243,6 +251,7 @@ export class PlaneController extends BaseController {
     const position = this.closestPoint(this.cursor);
     vec3.subtract(position, position, this.offset);
     this.targetTransform.position = position;
+    super.doAction();
   }
 }
 
@@ -301,11 +310,18 @@ export class CircleController extends BaseController {
     quat.multiply(q, this.orientation, q);
 
     this.targetTransform.rotation = q;
+
+    super.doAction();
   }
 }
 
 export class AxesController {
   public mode: 'none' | 'movement' | 'rotation' = 'movement';
+
+  get action$() {
+    return this._action$.asObservable();
+  }
+
   private xAxisController: AxisController;
   private yAxisController: AxisController;
   private zAxisController: AxisController;
@@ -320,6 +336,7 @@ export class AxesController {
   private phongShader: Shader;
   private flatShader: Shader;
   private release$ = new Subject();
+  private _action$ = new Subject();
 
   constructor(
     private renderer: Renderer,
@@ -332,6 +349,20 @@ export class AxesController {
     this.createAxes();
     this.createPlanes();
     this.createCircles();
+
+    merge(
+      this.xAxisController.action$,
+      this.yAxisController.action$,
+      this.zAxisController.action$,
+      this.xyCircleController.action$,
+      this.xzCircleController.action$,
+      this.yzCircleController.action$,
+      this.xyPlaneController.action$,
+      this.xzPlaneController.action$,
+      this.yzPlaneController.action$
+    )
+      .pipe(takeUntil(this.release$))
+      .subscribe(this._action$);
 
     this.axesDrawable = {
       material: {

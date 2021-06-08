@@ -27,9 +27,9 @@ merge(
     mapTo(closestsTest)
   ),
 
-  // fromEvent(document.querySelector('[href="#/subdivisions"]'), 'click').pipe(
-  //   mapTo(subdivisionTest)
-  // ),
+  fromEvent(document.querySelector('[href="#/subdivisions"]'), 'click').pipe(
+    mapTo(subdivisionTest)
+  ),
   of(intersectionTest)
 )
   .pipe(

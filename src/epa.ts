@@ -105,7 +105,7 @@ export const contactPoints = (
     return 0.0;
   }
 
-  let face: Face<SupportPoint> = null;
+  let face: Face = null;
 
   while (maxIterations-- > 0) {
     face = polytop.dequeue();
@@ -142,7 +142,7 @@ export const contactPoints = (
     }
 
     face.obsolete = true;
-    const silhouette: Silhouette<SupportPoint> = [];
+    const silhouette: Silhouette = [];
     for (let i = 0; i < 3; i++) {
       getSilhouette(
         silhouette,
@@ -160,14 +160,14 @@ export const contactPoints = (
     }
 
     const O = vec3.create();
-    let last: Face<SupportPoint> = null;
-    let first: Face<SupportPoint> = null;
+    let last: Face = null;
+    let first: Face = null;
 
     for (let [face, i] of silhouette) {
       const p0 = face.vertices[(i + 1) % 3];
       const p1 = face.vertices[i];
       const p2 = support;
-      const curr: Face<SupportPoint> = {
+      const curr: Face = {
         vertices: [p0, p1, p2],
         siblings: [face, null, last],
         adjacent: [i, 2, 1],
