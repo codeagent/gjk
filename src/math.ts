@@ -1,4 +1,7 @@
-import { vec2, vec3, vec4 } from 'gl-matrix';
+import { quat, vec2, vec3, vec4 } from 'gl-matrix';
+
+import { ShapeInterface } from './shape';
+import { PriorityQueue } from '../priority-queue';
 
 const aux = vec3.create();
 const mixed = (a: vec3, b: vec3, c: vec3) => vec3.dot(a, vec3.cross(aux, b, c));
@@ -8,11 +11,19 @@ export interface SupportPoint {
   support0: vec3;
   support1: vec3;
 }
-
 export type Simplex<T> = Set<T>;
+export type Polytop<T = SupportPoint> = PriorityQueue<Face<T>>;
+export interface Face<T = SupportPoint> {
+  vertices: T[];
+  siblings: [Face<T>, Face<T>, Face<T>]; // edgeIndex -> face
+  adjacent: [number, number, number]; // siblings[i].siblings[adjacent[i]] == this
+  closest: vec3;
+  distance: number;
+  obsolete: boolean;
+}
+export type Silhouette<T = SupportPoint> = Array<[Face<T>, number]>;
 
 export const origin = vec3.create();
-
 export const fromBarycentric = <T extends ArrayLike<number>>(
   out: vec3,
   barycentric: T,
@@ -300,4 +311,474 @@ export const closestPointToLineSegment = (
   }
 
   return vec2.set(out, 1.0 - t, t);
+};
+
+export const closestPointOnPlane = (
+  out: vec3,
+  p0: vec3,
+  p1: vec3,
+  p2: vec3,
+  w: vec3
+) => {
+  const a = vec3.create();
+  vec3.subtract(a, p1, p0);
+  vec3.subtract(out, p2, p0);
+  vec3.cross(out, a, out);
+  vec3.sub(a, w, p0);
+  vec3.scaleAndAdd(out, w, out, -vec3.dot(out, a) / vec3.dot(out, out));
+};
+
+export const isInsideTriangle = (
+  p0: vec3,
+  p1: vec3,
+  p2: vec3,
+  n: vec3,
+  w: vec3
+): boolean => {
+  const a = vec3.create();
+  const b = vec3.create();
+
+  vec3.sub(a, p1, p0);
+  vec3.sub(b, w, p0);
+  vec3.cross(a, a, b);
+  if (vec3.dot(n, a) < 0) {
+    return false;
+  }
+
+  vec3.sub(a, p2, p1);
+  vec3.sub(b, w, p1);
+  vec3.cross(a, a, b);
+  if (vec3.dot(n, a) < 0) {
+    return false;
+  }
+
+  vec3.sub(a, p0, p2);
+  vec3.sub(b, w, p2);
+  vec3.cross(a, a, b);
+  if (vec3.dot(n, a) < 0) {
+    return false;
+  }
+
+  return true;
+};
+
+export const createPolytopFromSimplex = (
+  simplex: Simplex<SupportPoint>,
+  shape: ShapeInterface<SupportPoint>
+): Polytop => {
+  if (simplex.size == 4) {
+    const [w0, w1, w2, w3] = Array.from(simplex);
+    return createTetrahedron(w0, w1, w2, w3);
+  } else if (simplex.size === 3) {
+    const [w0, w1, w2] = Array.from(simplex);
+    return createHexahedronFromTriangle(w0, w1, w2, shape);
+  } else if (simplex.size === 2) {
+    const [w0, w1] = Array.from(simplex);
+    return createHexahedronFromLineSegment(w0, w1, shape);
+  } else {
+    return null;
+  }
+};
+
+export const createTetrahedron = (
+  w0: SupportPoint,
+  w1: SupportPoint,
+  w2: SupportPoint,
+  w3: SupportPoint
+): Polytop => {
+  const w1w0 = vec3.create();
+  const w2w0 = vec3.create();
+
+  vec3.subtract(w1w0, w1.diff, w0.diff);
+  vec3.subtract(w2w0, w2.diff, w0.diff);
+
+  const x = vec3.create();
+  vec3.cross(x, w2w0, w1w0);
+
+  const w3w0 = vec3.create();
+  vec3.subtract(w3w0, w3.diff, w0.diff);
+
+  // preserve ccw orientation: swap w1 and w2
+  if (vec3.dot(w3w0, x) > 0.0) {
+    const tmp = w2;
+    w2 = w1;
+    w1 = tmp;
+  }
+
+  const face0: Face = {
+    vertices: [w0, w1, w3],
+    siblings: null,
+    adjacent: null,
+    distance: 0.0,
+    closest: vec3.create(),
+    obsolete: false
+  };
+
+  const face1: Face = {
+    vertices: [w1, w2, w3],
+    siblings: null,
+    adjacent: null,
+    distance: 0.0,
+    closest: vec3.create(),
+    obsolete: false
+  };
+
+  const face2: Face = {
+    vertices: [w2, w0, w3],
+    siblings: null,
+    adjacent: null,
+    distance: 0.0,
+    closest: vec3.create(),
+    obsolete: false
+  };
+
+  const face3: Face = {
+    vertices: [w1, w0, w2],
+    siblings: null,
+    adjacent: null,
+    distance: 0.0,
+    closest: vec3.create(),
+    obsolete: false
+  };
+
+  face0.siblings = [face3, face1, face2];
+  face1.siblings = [face3, face2, face0];
+  face2.siblings = [face3, face0, face1];
+  face3.siblings = [face0, face2, face1];
+
+  face0.adjacent = [0, 2, 1];
+  face1.adjacent = [2, 2, 1];
+  face2.adjacent = [1, 2, 1];
+  face3.adjacent = [0, 0, 0];
+
+  const queue = new PriorityQueue<Face>(
+    (a: Face, b: Face) => a.distance - b.distance
+  );
+
+  const O = vec3.create();
+  for (let face of [face0, face1, face2, face3]) {
+    closestPointOnPlane(
+      face.closest,
+      face.vertices[0].diff,
+      face.vertices[1].diff,
+      face.vertices[2].diff,
+      O
+    );
+
+    face.distance = vec3.dot(face.closest, face.closest);
+
+    queue.enqueue(face);
+  }
+
+  return queue;
+};
+
+export const createHexahedronFromTriangle = (
+  w0: SupportPoint,
+  w1: SupportPoint,
+  w2: SupportPoint,
+  shape: ShapeInterface<SupportPoint>
+) => {
+  const n = vec3.create();
+  const vw3 = vec3.create();
+  const vw4 = vec3.create();
+
+  vec3.subtract(vw3, w1.diff, w0.diff);
+  vec3.subtract(vw4, w2.diff, w0.diff);
+  vec3.cross(n, vw3, vw4);
+
+  const w3 = shape.support(
+    {
+      support0: vec3.create(),
+      support1: vec3.create(),
+      diff: vec3.create()
+    },
+    n
+  );
+
+  vec3.negate(n, n);
+
+  const w4 = shape.support(
+    {
+      support0: vec3.create(),
+      support1: vec3.create(),
+      diff: vec3.create()
+    },
+    n
+  );
+
+  const face0: Face = {
+    vertices: [w0, w1, w3],
+    siblings: null,
+    adjacent: null,
+    distance: 0.0,
+    closest: vec3.create(),
+    obsolete: false
+  };
+
+  const face1: Face = {
+    vertices: [w1, w2, w3],
+    siblings: null,
+    adjacent: null,
+    distance: 0.0,
+    closest: vec3.create(),
+    obsolete: false
+  };
+
+  const face2: Face = {
+    vertices: [w2, w0, w3],
+    siblings: null,
+    adjacent: null,
+    distance: 0.0,
+    closest: vec3.create(),
+    obsolete: false
+  };
+
+  const face3: Face = {
+    vertices: [w0, w4, w1],
+    siblings: null,
+    adjacent: null,
+    distance: 0.0,
+    closest: vec3.create(),
+    obsolete: false
+  };
+
+  const face4: Face = {
+    vertices: [w1, w4, w2],
+    siblings: null,
+    adjacent: null,
+    distance: 0.0,
+    closest: vec3.create(),
+    obsolete: false
+  };
+
+  const face5: Face = {
+    vertices: [w2, w4, w0],
+    siblings: null,
+    adjacent: null,
+    distance: 0.0,
+    closest: vec3.create(),
+    obsolete: false
+  };
+
+  face0.siblings = [face3, face1, face2];
+  face1.siblings = [face4, face2, face0];
+  face2.siblings = [face5, face0, face1];
+  face3.siblings = [face5, face4, face0];
+  face4.siblings = [face3, face5, face1];
+  face5.siblings = [face4, face3, face2];
+
+  face0.adjacent = [2, 2, 1];
+  face1.adjacent = [2, 2, 1];
+  face2.adjacent = [2, 2, 1];
+  face3.adjacent = [1, 0, 0];
+  face4.adjacent = [1, 0, 0];
+  face5.adjacent = [1, 0, 0];
+
+  const queue = new PriorityQueue<Face>(
+    (a: Face, b: Face) => a.distance - b.distance
+  );
+
+  const O = vec3.create();
+  for (let face of [face0, face1, face2, face3, face4, face5]) {
+    closestPointOnPlane(
+      face.closest,
+      face.vertices[0].diff,
+      face.vertices[1].diff,
+      face.vertices[2].diff,
+      O
+    );
+    face.distance = vec3.dot(face.closest, face.closest);
+    queue.enqueue(face);
+  }
+
+  return queue;
+};
+
+export const createHexahedronFromLineSegment = (
+  w3: SupportPoint,
+  w4: SupportPoint,
+  shape: ShapeInterface<SupportPoint>
+) => {
+  const w3w4 = vec3.create();
+  vec3.subtract(w3w4, w3.diff, w4.diff);
+
+  // find convenient axis
+  let min = w3w4[0];
+  let axis = vec3.fromValues(1.0, 0.0, 0.0);
+  if (w3w4[1] < min) {
+    min = w3w4[1];
+    vec3.set(axis, 0.0, 1.0, 0.0);
+  }
+  if (w3w4[2] < min) {
+    vec3.set(axis, 0.0, 0.0, 1.0);
+  }
+
+  // find w0 by cross product
+  const vw0 = vec3.create();
+  vec3.cross(vw0, w3w4, axis);
+  const w0 = shape.support(
+    {
+      support0: vec3.create(),
+      support1: vec3.create(),
+      diff: vec3.create()
+    },
+    vw0
+  );
+
+  const angle = Math.PI / 3.0;
+  vec3.scale(w3w4, w3w4, Math.sin(angle) / vec3.length(w3w4));
+  const q = quat.fromValues(w3w4[0], w3w4[1], w3w4[2], Math.cos(angle));
+
+  // find w1 and w2 by repeatedly rotation at 120 degrees
+  const vw1 = vec3.create();
+  vec3.transformQuat(vw1, w0.diff, q);
+  const w1 = shape.support(
+    {
+      support0: vec3.create(),
+      support1: vec3.create(),
+      diff: vec3.create()
+    },
+    vw1
+  );
+
+  const vw2 = vec3.create();
+  vec3.transformQuat(vw2, w1.diff, q);
+  const w2 = shape.support(
+    {
+      support0: vec3.create(),
+      support1: vec3.create(),
+      diff: vec3.create()
+    },
+    vw2
+  );
+
+  const face0: Face = {
+    vertices: [w0, w1, w3],
+    siblings: null,
+    adjacent: null,
+    distance: 0.0,
+    closest: vec3.create(),
+    obsolete: false
+  };
+
+  const face1: Face = {
+    vertices: [w1, w2, w3],
+    siblings: null,
+    adjacent: null,
+    distance: 0.0,
+    closest: vec3.create(),
+    obsolete: false
+  };
+
+  const face2: Face = {
+    vertices: [w2, w0, w3],
+    siblings: null,
+    adjacent: null,
+    distance: 0.0,
+    closest: vec3.create(),
+    obsolete: false
+  };
+
+  const face3: Face = {
+    vertices: [w0, w4, w1],
+    siblings: null,
+    adjacent: null,
+    distance: 0.0,
+    closest: vec3.create(),
+    obsolete: false
+  };
+
+  const face4: Face = {
+    vertices: [w1, w4, w2],
+    siblings: null,
+    adjacent: null,
+    distance: 0.0,
+    closest: vec3.create(),
+    obsolete: false
+  };
+
+  const face5: Face = {
+    vertices: [w2, w4, w0],
+    siblings: null,
+    adjacent: null,
+    distance: 0.0,
+    closest: vec3.create(),
+    obsolete: false
+  };
+
+  face0.siblings = [face3, face1, face2];
+  face1.siblings = [face4, face2, face0];
+  face2.siblings = [face5, face0, face1];
+  face3.siblings = [face5, face4, face0];
+  face4.siblings = [face3, face5, face1];
+  face5.siblings = [face4, face3, face2];
+
+  face0.adjacent = [2, 2, 1];
+  face1.adjacent = [2, 2, 1];
+  face2.adjacent = [2, 2, 1];
+  face3.adjacent = [1, 0, 0];
+  face4.adjacent = [1, 0, 0];
+  face5.adjacent = [1, 0, 0];
+
+  const queue = new PriorityQueue<Face>(
+    (a: Face, b: Face) => a.distance - b.distance
+  );
+
+  const O = vec3.create();
+  for (let face of [face0, face1, face2, face3, face4, face5]) {
+    closestPointOnPlane(
+      face.closest,
+      face.vertices[0].diff,
+      face.vertices[1].diff,
+      face.vertices[2].diff,
+      O
+    );
+    face.distance = vec3.dot(face.closest, face.closest);
+    queue.enqueue(face);
+  }
+
+  return queue;
+};
+
+export const checkAdjacency = <T>(polytop: Polytop<T>) => {
+  for (let face of Array.from(polytop)) {
+    for (let i = 0; i < 3; i++) {
+      const that = face.siblings[i].siblings[face.adjacent[i]];
+      if (that !== face) {
+        console.log(i, face, that);
+      }
+    }
+  }
+};
+
+export const getSilhouette = <T>(
+  out: Silhouette<T>,
+  face: Face<T>,
+  i: number,
+  support: vec3
+) => {
+  if (face.obsolete) {
+    return;
+  }
+
+  if (vec3.dot(face.closest, support) < vec3.dot(face.closest, face.closest)) {
+    // not visible from support point, add to silhouette
+    out.push([face, i]);
+  } else {
+    face.obsolete = true;
+
+    getSilhouette(
+      out,
+      face.siblings[(i + 1) % 3],
+      face.adjacent[(i + 1) % 3],
+      support
+    );
+    getSilhouette(
+      out,
+      face.siblings[(i + 2) % 3],
+      face.adjacent[(i + 2) % 3],
+      support
+    );
+  }
 };

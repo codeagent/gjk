@@ -162,7 +162,7 @@ export class MinkowskiDifference implements ShapeInterface<SupportPoint> {
     vec3.negate(this.opposite, dir);
     this.shape0.support(out.support0, dir);
     this.shape1.support(out.support1, this.opposite);
-    out.diff = vec3.subtract(out, out.support0, out.support1);
+    vec3.subtract(out.diff, out.support0, out.support1);
     return out;
   }
 }
