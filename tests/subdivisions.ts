@@ -1,5 +1,5 @@
-import { fromEvent, BehaviorSubject, Subject } from 'rxjs';
-import { map, filter, bufferTime, takeUntil } from 'rxjs/operators';
+import { fromEvent, Subject } from 'rxjs';
+import { map, filter, takeUntil } from 'rxjs/operators';
 import { quat, vec3, vec4 } from 'gl-matrix';
 
 import { ViewportInterface } from './viewport.interface';
@@ -30,29 +30,25 @@ import {
 
 import objects from '../objects/objects.obj';
 
-import { gjk } from '../gjk';
 import { ShapeInterface } from '../shape';
-import { ObjectPanel, GjkPanel } from './panels';
+import { ObjectPanel } from './panels';
 import { createShape, toEuler } from './tools';
+import { epa } from '../epa';
+import { createMeshFromPolytop } from '../mesh';
 
 export default class implements ViewportInterface {
   private renderer: Renderer;
   private meshes: MeshCollection;
   private idFrameBuffer: RenderTarget;
-  private axes1: AxesController;
-  private axes2: AxesController;
-  private object1Panel: ObjectPanel;
-  private object2Panel: ObjectPanel;
-  private gjkPanel: GjkPanel;
+  private axes: AxesController;
+  private shapePanel: ObjectPanel;
   private cameraController: ArcRotationCameraController;
   private drawables: Drawable[] = [];
   private geometries = new Map<string, Geometry>();
-  private shape1: ShapeInterface;
-  private shape2: ShapeInterface;
+  private shape: ShapeInterface;
   private connected = false;
-  private simplex = new Set<gjk.SupportPoint>();
+  private polytop: epa.Polytop;
   private dt = 0;
-  private dt$ = new BehaviorSubject<number>(0);
   private release$ = new Subject();
 
   connect(canvas: HTMLCanvasElement): void {
@@ -61,7 +57,7 @@ export default class implements ViewportInterface {
     }
 
     this.connected = true;
-    this.object1Panel = new ObjectPanel(
+    this.shapePanel = new ObjectPanel(
       document.getElementById('object-1-panel'),
       {
         objectType: 'box',
@@ -69,22 +65,7 @@ export default class implements ViewportInterface {
         orientation: vec3.fromValues(0.0, 0.0, 0.0)
       }
     );
-    this.object2Panel = new ObjectPanel(
-      document.getElementById('object-2-panel'),
-      {
-        objectType: 'box',
-        position: vec3.fromValues(-1.0, 1.0, 1.0),
-        orientation: vec3.fromValues(0.0, 0.0, 0.0)
-      }
-    );
-    this.gjkPanel = new GjkPanel(document.getElementById('gjk-panel'), {
-      time: 0.0,
-      simplexSize: 0,
-      maxIterations: 25,
-      epsilon: 0.001
-    });
-
-    this.object1Panel.onChanges().subscribe(e => {
+    this.shapePanel.onChanges().subscribe(e => {
       this.drawables[1].transform.position = e.position;
       this.drawables[1].transform.rotation = quat.fromEuler(
         quat.create(),
@@ -92,43 +73,30 @@ export default class implements ViewportInterface {
         e.orientation[1],
         e.orientation[2]
       );
-      this.drawables[1].geometry = this.geometries.get(e.objectType);
-      this.shape1 = createShape(
+
+      this.shape = createShape(
         e.objectType,
         this.drawables[1].transform,
         this.meshes
       );
-    });
-    this.object2Panel.onChanges().subscribe(e => {
-      this.drawables[2].transform.position = e.position;
-      this.drawables[2].transform.rotation = quat.fromEuler(
-        quat.create(),
-        e.orientation[0],
-        e.orientation[1],
-        e.orientation[2]
-      );
-      this.drawables[2].geometry = this.geometries.get(e.objectType);
-      this.shape2 = createShape(
-        e.objectType,
-        this.drawables[2].transform,
-        this.meshes
+
+      this.createPolytop();
+
+      this.drawables[1].geometry = this.renderer.createGeometry(
+        createMeshFromPolytop(this.polytop, false)
       );
     });
 
-    this.gjkPanel = new GjkPanel(document.getElementById('gjk-panel'), {
-      time: 0.0,
-      simplexSize: 0,
-      maxIterations: 25,
-      epsilon: 0.001
-    });
-
-    this.dt$
+    fromEvent(document, 'keydown')
       .pipe(
         takeUntil(this.release$),
-        bufferTime(250),
-        map((v: number[]) => v.reduce((acc, e) => acc + e / v.length))
+        filter((e: KeyboardEvent) => ['s'].includes(e.key))
       )
-      .subscribe(e => (this.dt = e));
+      .subscribe(() => {
+        const t = performance.now();
+        this.subdivide();
+        this.dt = performance.now() - t;
+      });
   }
 
   frame(): void {
@@ -138,15 +106,12 @@ export default class implements ViewportInterface {
 
     this.draw();
     this.update();
-    this.test();
   }
 
   disconnect(): void {
     this.connected = false;
     this.release$.next();
-    this.object1Panel.release();
-    this.object2Panel.release();
-    this.gjkPanel.release();
+    this.shapePanel.release();
   }
 
   private draw() {
@@ -158,56 +123,24 @@ export default class implements ViewportInterface {
     }
 
     this.renderer.clear(WebGL2RenderingContext.DEPTH_BUFFER_BIT);
-    this.axes1.draw('viewport');
-    this.axes2.draw('viewport');
+    this.axes.draw('viewport');
 
     this.renderer.setRenderTarget(this.idFrameBuffer);
     this.renderer.clear();
-    this.axes1.draw('id');
-    this.axes2.draw('id');
+    this.axes.draw('id');
   }
 
   private update() {
     this.cameraController.update();
 
     const pixes = this.renderer.readAsIdMap();
-    this.axes1.update(pixes);
-    this.axes2.update(pixes);
+    this.axes.update(pixes);
 
-    this.object1Panel.write({
-      ...this.object1Panel.state,
-      position: this.axes1.targetTransform.position,
-      orientation: toEuler(this.axes1.targetTransform.rotation)
+    this.shapePanel.write({
+      ...this.shapePanel.state,
+      position: this.axes.targetTransform.position,
+      orientation: toEuler(this.axes.targetTransform.rotation)
     });
-    this.object2Panel.write({
-      ...this.object2Panel.state,
-      position: this.axes2.targetTransform.position,
-      orientation: toEuler(this.axes2.targetTransform.rotation)
-    });
-    this.gjkPanel.write({
-      ...this.gjkPanel.state,
-      simplexSize: this.simplex.size,
-      time: this.dt
-    });
-  }
-
-  private test() {
-    this.simplex.clear();
-    const t = performance.now();
-    const areIntersect = gjk.areIntersect(
-      this.shape1,
-      this.shape2,
-      this.simplex,
-      this.gjkPanel.state.epsilon,
-      this.gjkPanel.state.maxIterations
-    );
-    this.dt$.next(performance.now() - t);
-
-    this.drawables[1].material.uniforms[
-      'albedo'
-    ] = this.drawables[2].material.uniforms['albedo'] = areIntersect
-      ? vec4.fromValues(1.0, 1.0, 0.2, 1.0)
-      : vec4.fromValues(0.0, 0.2, 1.0, 1.0);
   }
 
   private boostrap(canvas: HTMLCanvasElement) {
@@ -236,6 +169,10 @@ export default class implements ViewportInterface {
         this.renderer.createGeometry(this.meshes[type])
       );
     }
+
+    const shapeTransform = new Transform();
+    this.shape = createShape('sphere', shapeTransform, this.meshes);
+    this.polytop = this.createPolytop();
     this.drawables = [
       {
         material: {
@@ -254,31 +191,13 @@ export default class implements ViewportInterface {
           },
           state: { cullFace: false }
         },
-        geometry: this.geometries.get('box'),
-        transform: new Transform()
-      },
-      {
-        material: {
-          shader: phongShader,
-          uniforms: {
-            albedo: vec4.fromValues(0.0, 0.2, 1.0, 1.0)
-          },
-          state: { cullFace: false }
-        },
-        geometry: this.geometries.get('box'),
-        transform: new Transform(vec3.fromValues(4.0, 2.0, -4.0))
+        geometry: this.renderer.createGeometry(
+          createMeshFromPolytop(this.polytop, false)
+        ),
+        transform: shapeTransform
       }
     ];
-    this.axes1 = new AxesController(
-      this.renderer,
-      camera,
-      this.drawables[1].transform
-    );
-    this.axes2 = new AxesController(
-      this.renderer,
-      camera,
-      this.drawables[2].transform
-    );
+    this.axes = new AxesController(this.renderer, camera, shapeTransform);
 
     fromEvent(document, 'keydown')
       .pipe(
@@ -288,6 +207,27 @@ export default class implements ViewportInterface {
             ({ q: 'none', w: 'movement', e: 'rotation' }[e.key])
         )
       )
-      .subscribe(mode => (this.axes1.mode = this.axes2.mode = mode));
+      .subscribe(mode => (this.axes.mode = mode));
+  }
+
+  private createPolytop() {
+    const d = vec3.fromValues(1.0, 0.0, 0.0);
+    const w0 = vec3.create();
+    this.shape.support(w0, d);
+
+    const w1 = vec3.create();
+    vec3.negate(d, d);
+    this.shape.support(w1, d);
+
+    return epa.createHexahedronFromLineSegment(w0, w1, this.shape);
+  }
+
+  private subdivide() {
+    epa.subdivide(this.polytop, this.shape);
+    this.renderer.destroyGeometry(this.drawables[1].geometry);
+    this.drawables[1].geometry = this.renderer.createGeometry(
+      createMeshFromPolytop(this.polytop, false)
+    );
+    epa.checkAdjacency(this.polytop);
   }
 }

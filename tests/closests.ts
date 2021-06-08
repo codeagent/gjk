@@ -123,6 +123,14 @@ export default class implements ViewportInterface {
       maxIterations: 25,
       epsilon: 0.001
     });
+
+    this.dt$
+      .pipe(
+        takeUntil(this.release$),
+        bufferTime(250),
+        map((v: number[]) => v.reduce((acc, e) => acc + e / v.length))
+      )
+      .subscribe(e => (this.dt = e));
   }
 
   frame(): void {
@@ -192,7 +200,9 @@ export default class implements ViewportInterface {
     const distance = gjk.closestPoints(
       this.shape1,
       this.shape2,
-      this.closestPoints
+      this.closestPoints,
+      this.gjkPanel.state.epsilon,
+      this.gjkPanel.state.maxIterations
     );
 
     if (distance) {
@@ -314,13 +324,5 @@ export default class implements ViewportInterface {
         )
       )
       .subscribe(mode => (this.axes1.mode = this.axes2.mode = mode));
-
-    this.dt$
-      .pipe(
-        takeUntil(this.release$),
-        bufferTime(250),
-        map(v => v.reduce((acc, e) => acc + e / v.length))
-      )
-      .subscribe(e => (this.dt = e));
   }
 }

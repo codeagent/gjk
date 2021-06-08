@@ -22,13 +22,21 @@ export class GjkPanel {
   }
 
   constructor(
-    readonly element: HTMLElement,
+    private readonly element: HTMLElement,
     readonly options: GjkPanelOptions
   ) {
     this.state$.next(options);
-
+    this.activate(element);
     this.attachListeners(element);
     this.write(options);
+  }
+
+  private activate(element: HTMLElement) {
+    element.style.display = 'block';
+  }
+
+  private deactivate(element: HTMLElement) {
+    element.style.display = 'none';
   }
 
   private attachListeners(element: HTMLElement) {
@@ -68,5 +76,6 @@ export class GjkPanel {
 
   release() {
     this.release$.next();
+    this.deactivate(this.element);
   }
 }

@@ -1,6 +1,6 @@
-import { glMatrix, quat, vec3 } from 'gl-matrix';
+import { vec3 } from 'gl-matrix';
 import { BehaviorSubject, fromEvent, merge, Subject } from 'rxjs';
-import { delay, map, takeUntil } from 'rxjs/operators';
+import { map, takeUntil } from 'rxjs/operators';
 
 export interface ObjectPanelOptions {
   objectType: 'sphere' | 'box' | 'cylinder' | 'cone' | 'hull1' | 'hull2';
@@ -25,13 +25,21 @@ export class ObjectPanel {
   }
 
   constructor(
-    readonly element: HTMLElement,
+    private readonly element: HTMLElement,
     readonly options: ObjectPanelOptions
   ) {
     this.state$.next(options);
-
+    this.activate(element);
     this.attachListeners(element);
     this.write(options);
+  }
+
+  private activate(element: HTMLElement) {
+    element.style.display = 'block';
+  }
+
+  private deactivate(element: HTMLElement) {
+    element.style.display = 'none';
   }
 
   private attachListeners(element: HTMLElement) {
@@ -98,6 +106,7 @@ export class ObjectPanel {
 
   release() {
     this.release$.next();
+    this.deactivate(this.element);
   }
 }
 
