@@ -77,12 +77,6 @@ export default class implements ViewportInterface {
         orientation: vec3.fromValues(0.0, 0.0, 0.0)
       }
     );
-    this.gjkPanel = new GjkPanel(document.getElementById('gjk-panel'), {
-      time: 0.0,
-      simplexSize: 0,
-      maxIterations: 25,
-      epsilon: 0.001
-    });
 
     this.object1Panel.onChanges().subscribe(e => {
       this.drawables[1].transform.position = e.position;
@@ -119,7 +113,7 @@ export default class implements ViewportInterface {
       time: 0.0,
       simplexSize: 0,
       maxIterations: 25,
-      epsilon: 0.001
+      epsilon: 0.01
     });
 
     this.dt$

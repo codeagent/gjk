@@ -322,9 +322,11 @@ export namespace gjk {
     shape0: ShapeInterface,
     shape1: ShapeInterface,
     dir: vec3,
-    epsilon = 1.0e-4,
+    epsilon = 1.0e-2,
     maxIterations = 25
   ): number => {
+    epsilon = epsilon * epsilon;
+
     const O = vec3.create();
 
     const support = (dir: vec3) => {
@@ -426,12 +428,11 @@ export namespace gjk {
         } else {
           debugger;
         }
-        return vec3.distance(O, d);
+        return vec3.length(d);
       }
       outSimplex.add(s);
     }
-
-    return vec3.distance(O, d);
+    return vec3.length(d);
   };
 
   export const areIntersect = (
@@ -439,9 +440,11 @@ export namespace gjk {
     shape0: ShapeInterface,
     shape1: ShapeInterface,
     dir: vec3,
-    epsilon = 1.0e-4,
+    epsilon = 1.0e-2,
     maxIterations = 25
   ): boolean => {
+    epsilon = epsilon * epsilon; // work with squares (for tiny gain of performance)
+
     const O = vec3.create();
 
     const support = (dir: vec3) => {
@@ -467,7 +470,7 @@ export namespace gjk {
         vec3.copy(d, p[0].diff);
 
         // closest point is too close to origin
-        if (vec3.distance(d, O) < epsilon) {
+        if (vec3.dot(d, d) < epsilon) {
           return true;
         }
       } else if (outSimplex.size === 2) {
@@ -482,7 +485,7 @@ export namespace gjk {
         fromBarycentric(d, [p[0].diff, p[1].diff], b);
 
         // too close to line, return as having intersecton
-        if (vec3.distance(d, O) < epsilon) {
+        if (vec3.dot(d, d) < epsilon) {
           return true;
         }
       } else if (outSimplex.size === 3) {
@@ -497,7 +500,7 @@ export namespace gjk {
         fromBarycentric(d, [p[0].diff, p[1].diff, p[2].diff], b);
 
         // too close to triangle, return as having intersecton
-        if (vec3.distance(d, O) < epsilon) {
+        if (vec3.dot(d, d) < epsilon) {
           return true;
         }
       } else {
