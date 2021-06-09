@@ -221,7 +221,9 @@ export default class implements ViewportInterface {
   private subdivide(times = 64) {
     this.polytop = this.createPolytop();
     while (times-- >= 0) {
-      subdivide(this.polytop, this.shape);
+      try {
+        subdivide(this.polytop, this.shape);
+      } catch {}
     }
     this.renderer.destroyGeometry(this.drawables[1].geometry);
     this.drawables[1].geometry = this.renderer.createGeometry(

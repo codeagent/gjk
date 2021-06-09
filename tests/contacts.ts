@@ -30,7 +30,12 @@ import {
 
 import objects from '../objects/objects.obj';
 
-import { closestPoints, SupportPoint, ShapeInterface } from '../src';
+import {
+  areIntersect,
+  contactPoints,
+  SupportPoint,
+  ShapeInterface
+} from '../src';
 import { ObjectPanel, GjkPanel } from './panels';
 import { createShape, toEuler } from './tools';
 
@@ -53,7 +58,7 @@ export default class implements ViewportInterface {
   private dt = 0;
   private dt$ = new BehaviorSubject<number>(0);
   private release$ = new Subject();
-  private closestPoints: [vec3, vec3] = [vec3.create(), vec3.create()];
+  private contactPoints: [vec3, vec3] = [vec3.create(), vec3.create()];
 
   connect(canvas: HTMLCanvasElement): void {
     if (!this.renderer) {
@@ -65,7 +70,7 @@ export default class implements ViewportInterface {
     this.object1Panel = new ObjectPanel(
       document.getElementById('object-1-panel'),
       {
-        objectType: 'box',
+        objectType: 'cylinder',
         position: vec3.fromValues(0.0, 0.0, 0.0),
         orientation: vec3.fromValues(0.0, 0.0, 0.0)
       }
@@ -74,7 +79,7 @@ export default class implements ViewportInterface {
       document.getElementById('object-2-panel'),
       {
         objectType: 'cylinder',
-        position: vec3.fromValues(2.0, 3.0, -3.0),
+        position: vec3.fromValues(0.0, 1.0, -1.0),
         orientation: vec3.fromValues(0.0, 0.0, 0.0)
       }
     );
@@ -148,7 +153,16 @@ export default class implements ViewportInterface {
     this.renderer.setRenderTarget(null);
     this.renderer.clear();
 
-    for (const drawable of this.drawables) {
+    for (const drawable of [
+      this.drawables[0],
+      this.drawables[1],
+      this.drawables[2]
+    ]) {
+      this.renderer.drawGeometry(this.cameraController.camera, drawable);
+    }
+
+    this.renderer.clear(WebGL2RenderingContext.DEPTH_BUFFER_BIT);
+    for (const drawable of [this.drawables[3], this.drawables[4]]) {
       this.renderer.drawGeometry(this.cameraController.camera, drawable);
     }
 
@@ -196,9 +210,8 @@ export default class implements ViewportInterface {
       this.axes1.targetTransform.position,
       this.axes2.targetTransform.position
     );
-    const distance = closestPoints(
+    const hasIntersection = areIntersect(
       this.simplex,
-      this.closestPoints,
       this.shape1,
       this.shape2,
       dir,
@@ -206,9 +219,21 @@ export default class implements ViewportInterface {
       this.gjkPanel.state.maxIterations
     );
 
-    if (distance) {
-      this.drawables[3].transform.position = this.closestPoints[0];
-      this.drawables[4].transform.position = this.closestPoints[1];
+    if (hasIntersection) {
+      try {
+        contactPoints(
+          this.contactPoints,
+          this.shape1,
+          this.shape2,
+          this.simplex,
+          this.gjkPanel.state.epsilon,
+          this.gjkPanel.state.maxIterations
+        );
+      } catch (e) {
+        console.error(e);
+      }
+      this.drawables[3].transform.position = this.contactPoints[0];
+      this.drawables[4].transform.position = this.contactPoints[1];
     } else {
       this.drawables[3].transform.position = this.drawables[4].transform.position = vec3.create();
     }
@@ -257,7 +282,7 @@ export default class implements ViewportInterface {
         material: {
           shader: phongShader,
           uniforms: {
-            albedo: vec4.fromValues(1.0, 0.2, 0.0, 1.0)
+            albedo: vec4.fromValues(1.0, 0.2, 0.0, 0.1)
           },
           state: { cullFace: false }
         },
@@ -268,7 +293,7 @@ export default class implements ViewportInterface {
         material: {
           shader: phongShader,
           uniforms: {
-            albedo: vec4.fromValues(0.0, 0.2, 1.0, 1.0)
+            albedo: vec4.fromValues(0.0, 0.2, 1.0, 0.1)
           },
           state: { cullFace: false }
         },

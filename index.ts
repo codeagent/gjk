@@ -4,7 +4,7 @@ import 'uikit/dist/js/uikit.js';
 import { fromEvent, merge, of } from 'rxjs';
 import { distinctUntilChanged, filter, mapTo } from 'rxjs/operators';
 
-import { IntersectionTest, ClosestsTest, SubdivisionsTest } from './tests';
+import { IntersectionTest, ClosestsTest, SubdivisionsTest, ContactsTest } from './tests';
 import { ViewportInterface } from './tests/viewport.interface';
 // import './jasmine';
 
@@ -17,7 +17,7 @@ let active: ViewportInterface = null;
 const intersectionTest = new IntersectionTest();
 const closestsTest = new ClosestsTest();
 const subdivisionTest = new SubdivisionsTest();
-const depthTest = null;
+const contactsTest = new ContactsTest();
 
 merge(
   fromEvent(document.querySelector('[href="#/intersection"]'), 'click').pipe(
@@ -30,6 +30,10 @@ merge(
 
   fromEvent(document.querySelector('[href="#/subdivisions"]'), 'click').pipe(
     mapTo(subdivisionTest)
+  ),
+
+   fromEvent(document.querySelector('[href="#/contacts"]'), 'click').pipe(
+    mapTo(contactsTest)
   ),
   of(intersectionTest)
 )

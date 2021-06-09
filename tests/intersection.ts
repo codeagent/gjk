@@ -188,7 +188,11 @@ export default class implements ViewportInterface {
     this.simplex.clear();
     const t = performance.now();
     const dir = vec3.create();
-    vec3.subtract(dir, this.shape1.origin, this.shape2.origin);
+    vec3.subtract(
+      dir,
+      this.axes1.targetTransform.position,
+      this.axes2.targetTransform.position
+    );
     const are = areIntersect(
       this.simplex,
       this.shape1,

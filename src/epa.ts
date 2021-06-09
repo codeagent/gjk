@@ -20,6 +20,9 @@ export const subdivide = (
   shape: ShapeInterface<SupportPoint>
 ) => {
   const face = polytop.dequeue();
+  if (!face) {
+    return;
+  }
 
   if (!isInsideTriangle(face.closestBary)) {
     // never will be approached as closest. Put at the end of queue
@@ -105,8 +108,8 @@ export const contactPoints = (
   shape0: ShapeInterface,
   shape1: ShapeInterface,
   simplex: Simplex<SupportPoint>,
-  maxIterations = 25,
-  epsilon = 1.0e-3
+  epsilon = 1.0e-3,
+  maxIterations = 25
 ): number => {
   const minkowski = new MinkowskiDifference(shape0, shape1);
   const polytop = createPolytopFromSimplex(simplex, minkowski);
@@ -115,19 +118,27 @@ export const contactPoints = (
     return 0.0;
   }
 
-  let face: Face = null;
+  for (let f of polytop) {
+    if (isNaN(f.closest[0]) || isNaN(f.closest[1]) || isNaN(f.closest[2])) {
+      debugger;
+    }
+  }
 
-  while (maxIterations-- > 0) {
+  epsilon = epsilon * epsilon;
+
+  let face: Face = null;
+  let support: SupportPoint;
+  while (--maxIterations > 0 && polytop.length) {
     face = polytop.dequeue();
 
     if (!isInsideTriangle(face.closestBary)) {
       // never will be approached as closest. Put at the end of queue
       face.distance = Number.MAX_VALUE;
       polytop.enqueue(face);
-      return;
+      continue;
     }
 
-    const support = minkowski.support(
+    support = minkowski.support(
       {
         support0: vec3.create(),
         support1: vec3.create(),
@@ -136,8 +147,8 @@ export const contactPoints = (
       face.closest
     );
 
-    const lower = Math.sqrt(vec3.dot(face.closest, face.closest));
-    const upper = vec3.dot(face.closest, support.diff) / lower;
+    const lower = vec3.dot(face.closest, face.closest);
+    const upper = vec3.dot(face.closest, support.diff);
 
     if (upper - lower < epsilon) {
       break;
@@ -161,7 +172,6 @@ export const contactPoints = (
       }
     }
 
-    const O = vec3.create();
     let last: Face = null;
     let first: Face = null;
 
@@ -212,5 +222,28 @@ export const contactPoints = (
     last.siblings[1] = first;
   }
 
-  return face ? vec3.length(face.closest) : -1;
+  if (face) {
+    fromBarycentric(
+      out[0],
+      face.closestBary,
+      face.vertices[0].support0,
+      face.vertices[1].support0,
+      face.vertices[2].support0
+    );
+
+    fromBarycentric(
+      out[1],
+      face.closestBary,
+      face.vertices[0].support1,
+      face.vertices[1].support1,
+      face.vertices[2].support1
+    );
+
+    // out[0] = support.support0;
+    // out[1] = support.support1;
+
+    return vec3.distance(out[0], out[1]);
+  } else {
+    return 0.0;
+  }
 };
