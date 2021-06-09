@@ -1,5 +1,5 @@
 import { fromEvent, Subject } from 'rxjs';
-import { map, filter, takeUntil } from 'rxjs/operators';
+import { map, filter } from 'rxjs/operators';
 import { quat, vec3, vec4 } from 'gl-matrix';
 
 import { ViewportInterface } from './viewport.interface';
@@ -9,7 +9,6 @@ import {
   Camera,
   createGrid,
   Drawable,
-  Geometry,
   loadObj,
   MeshCollection,
   Renderer,
@@ -30,10 +29,18 @@ import {
 
 import objects from '../objects/objects.obj';
 
-import { ShapeInterface } from '../shape';
 import { ObjectPanel } from './panels';
 import { createShape, toEuler } from './tools';
-import { epa } from '../epa';
+import {
+  Polytop,
+  createHexahedronFromLineSegment,
+  ShapeInterface,
+  SupportPoint,
+  EmptyShape,
+  MinkowskiDifference,
+  subdivide,
+  checkAdjacency
+} from '../src';
 import { createMeshFromPolytop } from '../mesh';
 
 export default class implements ViewportInterface {
@@ -45,9 +52,9 @@ export default class implements ViewportInterface {
   private cameraController: ArcRotationCameraController;
   private drawables: Drawable[] = [];
   private shapeTransform = new Transform(vec3.fromValues(-0.25, -0.25, -0.25));
-  private shape: ShapeInterface;
+  private shape: ShapeInterface<SupportPoint>;
   private connected = false;
-  private polytop: epa.Polytop;
+  private polytop: Polytop;
   private dt = 0;
   private release$ = new Subject();
 
@@ -73,9 +80,7 @@ export default class implements ViewportInterface {
         e.orientation[1],
         e.orientation[2]
       );
-
-      this.shape = createShape(e.objectType, this.shapeTransform, this.meshes);
-
+      this.shape = this.createShape(e.objectType);
       this.subdivide();
     });
   }
@@ -145,7 +150,7 @@ export default class implements ViewportInterface {
     this.idFrameBuffer = this.renderer.createIdRenderTarget();
     this.cameraController = new ArcRotationCameraController(canvas, camera);
 
-    this.shape = createShape('sphere', this.shapeTransform, this.meshes);
+    this.shape = this.createShape('sphere');
     this.polytop = this.createPolytop();
 
     this.drawables = [
@@ -191,25 +196,44 @@ export default class implements ViewportInterface {
 
   private createPolytop() {
     const d = vec3.fromValues(1.0, 0.0, 0.0);
-    const w0 = vec3.create();
-    this.shape.support(w0, d);
+    const w0 = this.shape.support(
+      {
+        support0: vec3.create(),
+        support1: vec3.create(),
+        diff: vec3.create()
+      },
+      d
+    );
 
-    const w1 = vec3.create();
     vec3.negate(d, d);
-    this.shape.support(w1, d);
 
-    return epa.createHexahedronFromLineSegment(w0, w1, this.shape);
+    const w1 = this.shape.support(
+      {
+        support0: vec3.create(),
+        support1: vec3.create(),
+        diff: vec3.create()
+      },
+      d
+    );
+
+    return createHexahedronFromLineSegment(w0, w1, this.shape);
   }
 
   private subdivide(times = 64) {
     this.polytop = this.createPolytop();
     while (times-- >= 0) {
-      epa.subdivide(this.polytop, this.shape);
+      subdivide(this.polytop, this.shape);
     }
     this.renderer.destroyGeometry(this.drawables[1].geometry);
     this.drawables[1].geometry = this.renderer.createGeometry(
       createMeshFromPolytop(this.polytop, false)
     );
-    epa.checkAdjacency(this.polytop);
+    checkAdjacency(this.polytop);
+  }
+
+  private createShape(type: string) {
+    const shape0 = createShape(type, this.shapeTransform, this.meshes);
+    const shape1 = new EmptyShape();
+    return new MinkowskiDifference(shape0, shape1);
   }
 }

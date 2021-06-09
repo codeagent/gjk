@@ -9,35 +9,38 @@ import {
   closestPointOnPlane,
   createPolytopFromSimplex,
   origin,
-  SupportPoint
+  SupportPoint,
+  projectToTriangle,
+  fromBarycentric
 } from './math';
 import { ShapeInterface, MinkowskiDifference } from './shape';
 
-export const subdivide = (polytop: Polytop, shape: ShapeInterface) => {
+export const subdivide = (
+  polytop: Polytop,
+  shape: ShapeInterface<SupportPoint>
+) => {
   const face = polytop.dequeue();
 
-  if (
-    !isInsideTriangle(
-      face.vertices[0],
-      face.vertices[1],
-      face.vertices[2],
-      face.closest,
-      face.closest
-    )
-  ) {
+  if (!isInsideTriangle(face.closestBary)) {
     // never will be approached as closest. Put at the end of queue
     face.distance = Number.MAX_VALUE;
     polytop.enqueue(face);
     return;
   }
 
-  const w = vec3.create();
-  shape.support(w, face.closest);
+  const w = shape.support(
+    {
+      support0: vec3.create(),
+      support1: vec3.create(),
+      diff: vec3.create()
+    },
+    face.closest
+  );
 
   face.obsolete = true;
   const silhouette: Silhouette = [];
   for (let i = 0; i < 3; i++) {
-    getSilhouette(silhouette, face.siblings[i], face.adjacent[i], w);
+    getSilhouette(silhouette, face.siblings[i], face.adjacent[i], w.diff);
   }
 
   // in real epa algorithm use obsolete flag to completly ignore the face
@@ -47,32 +50,39 @@ export const subdivide = (polytop: Polytop, shape: ShapeInterface) => {
     }
   }
 
-  let last: Face<vec3> = null;
-  let first: Face<vec3> = null;
+  let last: Face = null;
+  let first: Face = null;
 
   for (let [face, i] of silhouette) {
     const p0 = face.vertices[(i + 1) % 3];
     const p1 = face.vertices[i];
     const p2 = w;
-    const curr: Face<vec3> = {
+    const curr: Face = {
       vertices: [p0, p1, p2],
       siblings: [face, null, last],
       adjacent: [i, 2, 1],
       distance: 0.0,
       closest: vec3.create(),
+      closestBary: vec3.create(),
       obsolete: false
     };
 
-    closestPointOnPlane(
-      curr.closest,
-      curr.vertices[0],
-      curr.vertices[1],
-      curr.vertices[2],
+    projectToTriangle(
+      curr.closestBary,
+      curr.vertices[0].diff,
+      curr.vertices[1].diff,
+      curr.vertices[2].diff,
       origin
+    );
+    fromBarycentric(
+      curr.closest,
+      curr.closestBary,
+      curr.vertices[0].diff,
+      curr.vertices[1].diff,
+      curr.vertices[2].diff
     );
 
     curr.distance = vec3.dot(curr.closest, curr.closest);
-
     face.siblings[i] = curr;
     face.adjacent[i] = 0; // !it took me long time to realize the problem.
 
@@ -110,19 +120,11 @@ export const contactPoints = (
   while (maxIterations-- > 0) {
     face = polytop.dequeue();
 
-    if (
-      !isInsideTriangle(
-        face.vertices[0].diff,
-        face.vertices[1].diff,
-        face.vertices[2].diff,
-        face.closest,
-        face.closest
-      )
-    ) {
+    if (!isInsideTriangle(face.closestBary)) {
       // never will be approached as closest. Put at the end of queue
       face.distance = Number.MAX_VALUE;
       polytop.enqueue(face);
-      continue;
+      return;
     }
 
     const support = minkowski.support(
@@ -173,15 +175,23 @@ export const contactPoints = (
         adjacent: [i, 2, 1],
         distance: 0.0,
         closest: vec3.create(),
+        closestBary: vec3.create(),
         obsolete: false
       };
 
-      closestPointOnPlane(
-        curr.closest,
+      projectToTriangle(
+        curr.closestBary,
         curr.vertices[0].diff,
         curr.vertices[1].diff,
         curr.vertices[2].diff,
-        O
+        origin
+      );
+      fromBarycentric(
+        curr.closest,
+        curr.closestBary,
+        curr.vertices[0].diff,
+        curr.vertices[1].diff,
+        curr.vertices[2].diff
       );
 
       curr.distance = vec3.dot(curr.closest, curr.closest);

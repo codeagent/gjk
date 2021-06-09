@@ -18,6 +18,7 @@ export interface Face<T = SupportPoint> {
   siblings: [Face<T>, Face<T>, Face<T>]; // edgeIndex -> face
   adjacent: [number, number, number]; // siblings[i].siblings[adjacent[i]] == this
   closest: vec3;
+  closestBary: vec3;
   distance: number;
   obsolete: boolean;
 }
@@ -328,38 +329,43 @@ export const closestPointOnPlane = (
   vec3.scaleAndAdd(out, w, out, -vec3.dot(out, a) / vec3.dot(out, out));
 };
 
-export const isInsideTriangle = (
-  p0: vec3,
-  p1: vec3,
-  p2: vec3,
-  n: vec3,
-  w: vec3
-): boolean => {
-  const a = vec3.create();
-  const b = vec3.create();
+export const isInsideTriangle = (barycentric: vec3): boolean =>
+  barycentric[0] < 0.0 || barycentric[1] < 0.0 || barycentric[2] < 0.0
+    ? false
+    : true;
 
-  vec3.sub(a, p1, p0);
-  vec3.sub(b, w, p0);
-  vec3.cross(a, a, b);
-  if (vec3.dot(n, a) < 0) {
-    return false;
-  }
+export const projectToTriangle = (
+  out: vec3,
+  a: vec3,
+  b: vec3,
+  c: vec3,
+  p: vec3
+) => {
+  const n = vec3.create();
+  const q = vec3.create();
+  const r = vec3.create();
+  const t = vec3.create();
+  vec3.subtract(q, b, a);
+  vec3.subtract(r, c, a);
+  vec3.cross(n, q, r);
 
-  vec3.sub(a, p2, p1);
-  vec3.sub(b, w, p1);
-  vec3.cross(a, a, b);
-  if (vec3.dot(n, a) < 0) {
-    return false;
-  }
+  // c
+  vec3.subtract(q, a, p);
+  vec3.subtract(r, b, p);
+  vec3.cross(out, q, r);
+  const wc = vec3.dot(n, out);
 
-  vec3.sub(a, p0, p2);
-  vec3.sub(b, w, p2);
-  vec3.cross(a, a, b);
-  if (vec3.dot(n, a) < 0) {
-    return false;
-  }
+  // a
+  vec3.subtract(t, c, p);
+  vec3.cross(out, r, t);
+  const wa = vec3.dot(n, out);
 
-  return true;
+  // b
+  vec3.cross(out, t, q);
+  const wb = vec3.dot(n, out);
+
+  const denom = wa + wb + wc;
+  vec3.set(out, wa / denom, wb / denom, wc / denom);
 };
 
 export const createPolytopFromSimplex = (
@@ -411,6 +417,7 @@ export const createTetrahedron = (
     adjacent: null,
     distance: 0.0,
     closest: vec3.create(),
+    closestBary: vec3.create(),
     obsolete: false
   };
 
@@ -420,6 +427,7 @@ export const createTetrahedron = (
     adjacent: null,
     distance: 0.0,
     closest: vec3.create(),
+    closestBary: vec3.create(),
     obsolete: false
   };
 
@@ -429,6 +437,7 @@ export const createTetrahedron = (
     adjacent: null,
     distance: 0.0,
     closest: vec3.create(),
+    closestBary: vec3.create(),
     obsolete: false
   };
 
@@ -438,6 +447,7 @@ export const createTetrahedron = (
     adjacent: null,
     distance: 0.0,
     closest: vec3.create(),
+    closestBary: vec3.create(),
     obsolete: false
   };
 
@@ -457,13 +467,21 @@ export const createTetrahedron = (
 
   const O = vec3.create();
   for (let face of [face0, face1, face2, face3]) {
-    closestPointOnPlane(
-      face.closest,
+    projectToTriangle(
+      face.closestBary,
       face.vertices[0].diff,
       face.vertices[1].diff,
       face.vertices[2].diff,
       O
     );
+    fromBarycentric(
+      face.closest,
+      face.closestBary,
+      face.vertices[0].diff,
+      face.vertices[1].diff,
+      face.vertices[2].diff
+    );
+    face.distance = vec3.dot(face.closest, face.closest);
 
     face.distance = vec3.dot(face.closest, face.closest);
 
@@ -513,6 +531,7 @@ export const createHexahedronFromTriangle = (
     adjacent: null,
     distance: 0.0,
     closest: vec3.create(),
+    closestBary: vec3.create(),
     obsolete: false
   };
 
@@ -522,6 +541,7 @@ export const createHexahedronFromTriangle = (
     adjacent: null,
     distance: 0.0,
     closest: vec3.create(),
+    closestBary: vec3.create(),
     obsolete: false
   };
 
@@ -531,6 +551,7 @@ export const createHexahedronFromTriangle = (
     adjacent: null,
     distance: 0.0,
     closest: vec3.create(),
+    closestBary: vec3.create(),
     obsolete: false
   };
 
@@ -540,6 +561,7 @@ export const createHexahedronFromTriangle = (
     adjacent: null,
     distance: 0.0,
     closest: vec3.create(),
+    closestBary: vec3.create(),
     obsolete: false
   };
 
@@ -549,6 +571,8 @@ export const createHexahedronFromTriangle = (
     adjacent: null,
     distance: 0.0,
     closest: vec3.create(),
+    closestBary: vec3.create(),
+
     obsolete: false
   };
 
@@ -558,6 +582,7 @@ export const createHexahedronFromTriangle = (
     adjacent: null,
     distance: 0.0,
     closest: vec3.create(),
+    closestBary: vec3.create(),
     obsolete: false
   };
 
@@ -581,12 +606,19 @@ export const createHexahedronFromTriangle = (
 
   const O = vec3.create();
   for (let face of [face0, face1, face2, face3, face4, face5]) {
-    closestPointOnPlane(
-      face.closest,
+    projectToTriangle(
+      face.closestBary,
       face.vertices[0].diff,
       face.vertices[1].diff,
       face.vertices[2].diff,
       O
+    );
+    fromBarycentric(
+      face.closest,
+      face.closestBary,
+      face.vertices[0].diff,
+      face.vertices[1].diff,
+      face.vertices[2].diff
     );
     face.distance = vec3.dot(face.closest, face.closest);
     queue.enqueue(face);
@@ -659,6 +691,7 @@ export const createHexahedronFromLineSegment = (
     adjacent: null,
     distance: 0.0,
     closest: vec3.create(),
+    closestBary: vec3.create(),
     obsolete: false
   };
 
@@ -668,6 +701,7 @@ export const createHexahedronFromLineSegment = (
     adjacent: null,
     distance: 0.0,
     closest: vec3.create(),
+    closestBary: vec3.create(),
     obsolete: false
   };
 
@@ -677,6 +711,7 @@ export const createHexahedronFromLineSegment = (
     adjacent: null,
     distance: 0.0,
     closest: vec3.create(),
+    closestBary: vec3.create(),
     obsolete: false
   };
 
@@ -686,6 +721,7 @@ export const createHexahedronFromLineSegment = (
     adjacent: null,
     distance: 0.0,
     closest: vec3.create(),
+    closestBary: vec3.create(),
     obsolete: false
   };
 
@@ -695,6 +731,7 @@ export const createHexahedronFromLineSegment = (
     adjacent: null,
     distance: 0.0,
     closest: vec3.create(),
+    closestBary: vec3.create(),
     obsolete: false
   };
 
@@ -704,6 +741,7 @@ export const createHexahedronFromLineSegment = (
     adjacent: null,
     distance: 0.0,
     closest: vec3.create(),
+    closestBary: vec3.create(),
     obsolete: false
   };
 
@@ -727,12 +765,19 @@ export const createHexahedronFromLineSegment = (
 
   const O = vec3.create();
   for (let face of [face0, face1, face2, face3, face4, face5]) {
-    closestPointOnPlane(
-      face.closest,
+    projectToTriangle(
+      face.closestBary,
       face.vertices[0].diff,
       face.vertices[1].diff,
       face.vertices[2].diff,
       O
+    );
+    fromBarycentric(
+      face.closest,
+      face.closestBary,
+      face.vertices[0].diff,
+      face.vertices[1].diff,
+      face.vertices[2].diff
     );
     face.distance = vec3.dot(face.closest, face.closest);
     queue.enqueue(face);

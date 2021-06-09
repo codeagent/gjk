@@ -150,6 +150,12 @@ export class Cylinder implements ShapeInterface {
   }
 }
 
+export class EmptyShape implements ShapeInterface {
+  support(out: vec3, dir: vec3): vec3 {
+    return vec3.set(out, 0.0, 0.0, 0.0);
+  }
+}
+
 export class MinkowskiDifference implements ShapeInterface<SupportPoint> {
   private opposite = vec3.create();
 

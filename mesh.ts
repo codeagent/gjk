@@ -1,6 +1,7 @@
 import { vec3, glMatrix } from 'gl-matrix';
 import { epa } from './epa2';
 import { Mesh } from './graphics';
+import { Polytop } from './src';
 
 Object.assign(glMatrix, { EPSILON: 1.0e-2 });
 
@@ -145,20 +146,20 @@ export const getPositions = (mesh: Mesh): vec3[] => {
 };
 
 export const createMeshFromPolytop = (
-  polytop: epa.Polytop,
+  polytop: Polytop,
   wired = true
 ): Mesh => {
   const vertexData = [];
   const indexData = [];
 
   if (wired) {
-    for (let face of polytop) {
+    for (let face of Array.from(polytop)) {
       for (let i = 0; i < 3; i++) {
         indexData.push(vertexData.length / 6);
-        vertexData.push(...face.vertices[i], ...WHITE);
+        vertexData.push(...face.vertices[i].diff, ...WHITE);
 
         indexData.push(vertexData.length / 6);
-        vertexData.push(...face.vertices[(i + 1) % 3], ...WHITE);
+        vertexData.push(...face.vertices[(i + 1) % 3].diff, ...WHITE);
       }
     }
 
@@ -185,18 +186,18 @@ export const createMeshFromPolytop = (
       indexData: Uint16Array.from(indexData)
     };
   } else {
-    for (let face of polytop) {
+    for (let face of Array.from(polytop)) {
       const normal = vec3.create();
       const e0 = vec3.create();
       const e1 = vec3.create();
-      vec3.subtract(e0, face.vertices[1], face.vertices[0]);
-      vec3.subtract(e1, face.vertices[2], face.vertices[0]);
+      vec3.subtract(e0, face.vertices[1].diff, face.vertices[0].diff);
+      vec3.subtract(e1, face.vertices[2].diff, face.vertices[0].diff);
       vec3.cross(normal, e0, e1);
       vec3.normalize(normal, normal);
 
       for (let i = 0; i < 3; i++) {
         indexData.push(vertexData.length / 6);
-        vertexData.push(...face.vertices[i], ...normal);
+        vertexData.push(...face.vertices[i].diff, ...normal);
       }
     }
 
