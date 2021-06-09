@@ -41,7 +41,7 @@ import {
   subdivide,
   checkAdjacency
 } from '../src';
-import { createMeshFromPolytop } from '../mesh';
+import { createMeshFromPolytop } from './tools';
 
 export default class implements ViewportInterface {
   private renderer: Renderer;
@@ -55,7 +55,6 @@ export default class implements ViewportInterface {
   private shape: ShapeInterface<SupportPoint>;
   private connected = false;
   private polytop: Polytop;
-  private dt = 0;
   private release$ = new Subject();
 
   connect(canvas: HTMLCanvasElement): void {

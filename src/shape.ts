@@ -1,4 +1,5 @@
 import { mat3, mat4, vec3 } from 'gl-matrix';
+
 import { SupportPoint } from './math';
 
 /**

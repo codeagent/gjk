@@ -1,4 +1,5 @@
 import { vec3 } from 'gl-matrix';
+
 import {
   Polytop,
   isInsideTriangle,
@@ -6,7 +7,6 @@ import {
   Silhouette,
   Face,
   Simplex,
-  closestPointOnPlane,
   createPolytopFromSimplex,
   origin,
   SupportPoint,

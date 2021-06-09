@@ -3,6 +3,7 @@ import 'uikit/dist/js/uikit.js';
 
 import { fromEvent, merge, of } from 'rxjs';
 import { distinctUntilChanged, filter, mapTo } from 'rxjs/operators';
+
 import { IntersectionTest, ClosestsTest, SubdivisionsTest } from './tests';
 import { ViewportInterface } from './tests/viewport.interface';
 // import './jasmine';

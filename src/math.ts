@@ -1,7 +1,7 @@
 import { quat, vec2, vec3, vec4 } from 'gl-matrix';
 
 import { ShapeInterface } from './shape';
-import { PriorityQueue } from '../priority-queue';
+import { PriorityQueue } from './priority-queue';
 
 const aux = vec3.create();
 const mixed = (a: vec3, b: vec3, c: vec3) => vec3.dot(a, vec3.cross(aux, b, c));
