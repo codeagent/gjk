@@ -49,7 +49,7 @@ export default class implements ViewportInterface {
   private shape1: ShapeInterface;
   private shape2: ShapeInterface;
   private connected = false;
-  private simplex = new Set<SupportPoint>();
+  public readonly simplex = new Set<SupportPoint>();
   private dt = 0;
   private dt$ = new BehaviorSubject<number>(0);
   private release$ = new Subject();
@@ -115,13 +115,13 @@ export default class implements ViewportInterface {
       epsilon: 0.01
     });
 
-    this.dt$
-      .pipe(
-        takeUntil(this.release$),
-        bufferTime(250),
-        map((v: number[]) => v.reduce((acc, e) => acc + e / v.length))
-      )
-      .subscribe(e => (this.dt = e));
+    // this.dt$
+    //   .pipe(
+    //     takeUntil(this.release$),
+    //     bufferTime(250),
+    //     map((v: number[]) => v.reduce((acc, e) => acc + e / v.length))
+    //   )
+    //   .subscribe(e => (this.dt = e));
   }
 
   frame(): void {

@@ -3,6 +3,9 @@ import { quat, vec3 } from 'gl-matrix';
 import { Mesh, MeshCollection, Transform } from '../graphics';
 import { Polytop, Box, Cone, Cylinder, Polyhedra, Sphere } from '../src';
 
+const SECONDARY = [0.25, 0.25, 0.25];
+const WHITE = [1.0, 1.0, 1.0];
+
 export const toEuler = (q: quat): vec3 => {
   const R2D = 180.0 / Math.PI;
 
@@ -148,3 +151,117 @@ export const createMeshFromPolytop = (polytop: Polytop, wired = true): Mesh => {
     };
   }
 };
+
+export const createTetra = (p0: vec3, p1: vec3, p2: vec3, p3: vec3): Mesh => ({
+  vertexFormat: [
+    {
+      semantics: 'position',
+      size: 3,
+      type: WebGL2RenderingContext.FLOAT,
+      slot: 0,
+      offset: 0,
+      stride: 24
+    },
+    {
+      semantics: 'color',
+      size: 3,
+      type: WebGL2RenderingContext.FLOAT,
+      slot: 1,
+      offset: 12,
+      stride: 24
+    }
+  ],
+  vertexData: new Float32Array([
+    ...p0,
+    ...SECONDARY,
+    ...p1,
+    ...SECONDARY,
+
+    ...p0,
+    ...SECONDARY,
+    ...p2,
+    ...SECONDARY,
+
+    ...p0,
+    ...SECONDARY,
+    ...p3,
+    ...SECONDARY,
+
+    ...p1,
+    ...SECONDARY,
+    ...p2,
+    ...SECONDARY,
+
+    ...p2,
+    ...SECONDARY,
+    ...p3,
+    ...SECONDARY,
+
+    ...p1,
+    ...SECONDARY,
+    ...p3,
+    ...SECONDARY
+  ]),
+  indexData: Uint16Array.from([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+});
+
+export const createTriangle = (p0: vec3, p1: vec3, p2: vec3): Mesh => ({
+  vertexFormat: [
+    {
+      semantics: 'position',
+      size: 3,
+      type: WebGL2RenderingContext.FLOAT,
+      slot: 0,
+      offset: 0,
+      stride: 24
+    },
+    {
+      semantics: 'color',
+      size: 3,
+      type: WebGL2RenderingContext.FLOAT,
+      slot: 1,
+      offset: 12,
+      stride: 24
+    }
+  ],
+  vertexData: new Float32Array([
+    ...p0,
+    ...SECONDARY,
+    ...p1,
+    ...SECONDARY,
+
+    ...p1,
+    ...SECONDARY,
+    ...p2,
+    ...SECONDARY,
+
+    ...p2,
+    ...SECONDARY,
+    ...p0,
+    ...SECONDARY
+  ]),
+  indexData: Uint16Array.from([0, 1, 2, 3, 4, 5])
+});
+
+export const createSegment = (p0: vec3, p1: vec3): Mesh => ({
+  vertexFormat: [
+    {
+      semantics: 'position',
+      size: 3,
+      type: WebGL2RenderingContext.FLOAT,
+      slot: 0,
+      offset: 0,
+      stride: 24
+    },
+    {
+      semantics: 'color',
+      size: 3,
+      type: WebGL2RenderingContext.FLOAT,
+      slot: 1,
+      offset: 12,
+      stride: 24
+    }
+  ],
+  vertexData: new Float32Array([...p0, ...SECONDARY, ...p1, ...SECONDARY]),
+  indexData: Uint16Array.from([0, 1])
+});
