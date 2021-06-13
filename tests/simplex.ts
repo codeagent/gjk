@@ -1,4 +1,4 @@
-import { vec4 } from 'gl-matrix';
+import { vec3, vec4 } from 'gl-matrix';
 
 import { ViewportInterface } from './viewport.interface';
 import {
@@ -52,8 +52,8 @@ export default class implements ViewportInterface {
       return;
     }
 
-    this.draw();
     this.update();
+    this.draw();
   }
 
   disconnect(): void {
@@ -79,6 +79,7 @@ export default class implements ViewportInterface {
       }
       this.drawables[1].geometry = null;
       this.drawables = [this.drawables[0], this.drawables[1]];
+
       const material = {
         shader: this.phongShader,
         uniforms: {
@@ -90,7 +91,7 @@ export default class implements ViewportInterface {
         this.drawables.push({
           material,
           geometry: this.sphere,
-          transform: new Transform(p.diff)
+          transform: new Transform(p.diff, vec3.fromValues(0.1, 0.1, 0.1))
         });
       }
 
@@ -150,7 +151,7 @@ export default class implements ViewportInterface {
         material: {
           shader: this.flatShader,
           uniforms: {
-            albedo: vec4.fromValues(1.0, 1.0, 1.0, 1.0)
+            albedo: vec4.fromValues(1.0, 1.0, 0.8, 1.0)
           },
           state: { cullFace: false }
         },

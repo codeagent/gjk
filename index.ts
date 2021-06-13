@@ -3,7 +3,7 @@ import 'uikit/dist/css/uikit.css';
 import 'uikit/dist/js/uikit.js';
 import './style.css';
 import { fromEvent, merge, of } from 'rxjs';
-import { distinctUntilChanged, filter, mapTo } from 'rxjs/operators';
+import {  filter, mapTo } from 'rxjs/operators';
 
 import { IntersectionTest, ClosestsTest, SubdivisionsTest, ContactsTest, SimplexView } from './tests';
 import { ViewportInterface } from './tests/viewport.interface';
@@ -47,7 +47,6 @@ merge(
   of([intersectionTest, intersectionTestSimpelexView])
 )
   .pipe(
-    distinctUntilChanged(),
     filter(c => !!c)
   )
   .subscribe((viewports: ViewportInterface[]) => {

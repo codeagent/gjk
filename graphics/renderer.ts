@@ -31,6 +31,8 @@ export interface VertexAttribute {
 
 export interface Geometry {
   vao: WebGLVertexArrayObject;
+  vbo: VertexBuffer;
+  ebo: IndexBuffer;
   length: number;
   type: GLenum;
 }
@@ -111,7 +113,7 @@ export class Renderer {
     }
     this._gl.bindBuffer(WebGL2RenderingContext.ELEMENT_ARRAY_BUFFER, iBuffer);
     this._gl.bindVertexArray(null);
-    return { vao, length: mesh.indexData.length, type };
+    return { vao, vbo: vBuffer, ebo: iBuffer, length: mesh.indexData.length, type };
   }
 
   createShader(vs: string, fs: string) {
@@ -210,12 +212,22 @@ export class Renderer {
     }
 
     this._gl.bindVertexArray(drawable.geometry.vao);
+    this._gl.bindBuffer(WebGL2RenderingContext.ELEMENT_ARRAY_BUFFER, drawable.geometry.ebo);
+    this._gl.bindBuffer(WebGL2RenderingContext.ARRAY_BUFFER, drawable.geometry.vbo);
+
+    if(this._gl.getError() !== WebGL2RenderingContext.NO_ERROR ) {
+      debugger;
+    }
     this._gl.drawElements(
       drawable.geometry.type ?? WebGL2RenderingContext.TRIANGLES,
       drawable.geometry.length,
       WebGL2RenderingContext.UNSIGNED_SHORT,
       0
     );
+
+    if(this._gl.getError() !== WebGL2RenderingContext.NO_ERROR ) {
+      debugger;
+    }
   }
 
   createIdRenderTarget(): RenderTarget {
@@ -338,6 +350,8 @@ export class Renderer {
   }
 
   destroyGeometry(geometry: Geometry) {
+    this._gl.deleteBuffer(geometry.ebo);
+    this._gl.deleteBuffer(geometry.vbo);
     this._gl.deleteVertexArray(geometry.vao);
   }
 
