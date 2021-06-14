@@ -34,7 +34,7 @@ import {
   areIntersect,
   contactPoints,
   SupportPoint,
-  ShapeInterface
+  ShapeInterface, Hull
 } from '../src';
 import { ObjectPanel, GjkPanel } from './panels';
 import { createShape, toEuler } from './tools';
@@ -268,6 +268,11 @@ export default class implements ViewportInterface {
         this.renderer.createGeometry(this.meshes[type])
       );
     }
+
+    const hull = Hull.convexHull();
+
+
+
     this.drawables = [
       {
         material: {
@@ -350,5 +355,10 @@ export default class implements ViewportInterface {
         )
       )
       .subscribe(mode => (this.axes1.mode = this.axes2.mode = mode));
+  }
+
+
+  private createCloud = (n: number) => {
+    while(n--) {}
   }
 }
