@@ -15,7 +15,8 @@ import {
   Renderer,
   RenderTarget,
   Transform,
-  AxesController
+  AxesController,
+  Mesh
 } from '../graphics';
 
 import {
@@ -34,10 +35,15 @@ import {
   areIntersect,
   contactPoints,
   SupportPoint,
-  ShapeInterface, Hull
+  ShapeInterface,
+  convexHull,
+  Polytop
 } from '../src';
 import { ObjectPanel, GjkPanel } from './panels';
-import { createShape, toEuler } from './tools';
+import { createShape, getPositions, toEuler } from './tools';
+
+const SECONDARY = [0.25, 0.25, 0.25];
+const WHITE = [1.0, 1.0, 1.0];
 
 export default class implements ViewportInterface {
   private renderer: Renderer;
@@ -71,7 +77,7 @@ export default class implements ViewportInterface {
       document.getElementById('object-1-panel'),
       {
         objectType: 'cylinder',
-        position: vec3.fromValues(0.0, 0.0, 0.0),
+        position: vec3.fromValues(10.0, 0.0, 0.0),
         orientation: vec3.fromValues(0.0, 0.0, 0.0)
       }
     );
@@ -79,7 +85,7 @@ export default class implements ViewportInterface {
       document.getElementById('object-2-panel'),
       {
         objectType: 'cylinder',
-        position: vec3.fromValues(0.0, 1.0, -1.0),
+        position: vec3.fromValues(10.0, 1.0, -1.0),
         orientation: vec3.fromValues(0.0, 0.0, 0.0)
       }
     );
@@ -269,18 +275,22 @@ export default class implements ViewportInterface {
       );
     }
 
-    const hull = Hull.convexHull();
+    const cloud = getPositions(this.meshes['sphere']);
+    // const cloud = this.createCloud(512);
+    const hull = convexHull(cloud);
+    const hullGeometry = this.renderer.createGeometry(
+      this.createMeshFromPolytop(hull, false)
+    );
 
-
-
+    console.log(hull);
     this.drawables = [
       {
         material: {
-          shader: flatShader,
-          uniforms: { albedo: vec4.fromValues(0.0, 0.0, 0.0, 1.0) },
+          shader: phongShader,
+          uniforms: { albedo: vec4.fromValues(1.0, 0.0, 0.0, 1.0) },
           state: {}
         },
-        geometry: gridGeometry,
+        geometry: hullGeometry,
         transform: new Transform()
       },
       {
@@ -357,8 +367,88 @@ export default class implements ViewportInterface {
       .subscribe(mode => (this.axes1.mode = this.axes2.mode = mode));
   }
 
+  private createCloud(n: number) {
+    const cloud = [];
+    while (n--) {
+      cloud.push(vec3.random(vec3.create(), Math.random() * 4 + 1));
+    }
+    return cloud;
+  }
+  private createMeshFromPolytop(polytop: Polytop<vec3>, wired = true): Mesh {
+    const vertexData = [];
+    const indexData = [];
 
-  private createCloud = (n: number) => {
-    while(n--) {}
+    if (wired) {
+      for (let face of Array.from(polytop)) {
+        for (let i = 0; i < 3; i++) {
+          indexData.push(vertexData.length / 6);
+          vertexData.push(...face.vertices[i], ...WHITE);
+
+          indexData.push(vertexData.length / 6);
+          vertexData.push(...face.vertices[(i + 1) % 3], ...WHITE);
+        }
+      }
+
+      return {
+        vertexFormat: [
+          {
+            semantics: 'position',
+            size: 3,
+            type: WebGL2RenderingContext.FLOAT,
+            slot: 0,
+            offset: 0,
+            stride: 24
+          },
+          {
+            semantics: 'color',
+            size: 3,
+            type: WebGL2RenderingContext.FLOAT,
+            slot: 1,
+            offset: 12,
+            stride: 24
+          }
+        ],
+        vertexData: Float32Array.from(vertexData),
+        indexData: Uint16Array.from(indexData)
+      };
+    } else {
+      for (let face of Array.from(polytop)) {
+        const normal = vec3.create();
+        const e0 = vec3.create();
+        const e1 = vec3.create();
+        vec3.subtract(e0, face.vertices[1], face.vertices[0]);
+        vec3.subtract(e1, face.vertices[2], face.vertices[0]);
+        vec3.cross(normal, e0, e1);
+        vec3.normalize(normal, normal);
+
+        for (let i = 0; i < 3; i++) {
+          indexData.push(vertexData.length / 6);
+          vertexData.push(...face.vertices[i], ...normal);
+        }
+      }
+
+      return {
+        vertexFormat: [
+          {
+            semantics: 'position',
+            size: 3,
+            type: WebGL2RenderingContext.FLOAT,
+            slot: 0,
+            offset: 0,
+            stride: 24
+          },
+          {
+            semantics: 'normal',
+            size: 3,
+            type: WebGL2RenderingContext.FLOAT,
+            slot: 1,
+            offset: 12,
+            stride: 24
+          }
+        ],
+        vertexData: Float32Array.from(vertexData),
+        indexData: Uint16Array.from(indexData)
+      };
+    }
   }
 }
