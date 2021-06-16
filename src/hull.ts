@@ -1,7 +1,10 @@
 import { vec3 } from 'gl-matrix';
+import { Mesh } from '../graphics';
+import { getPositions } from '../tests';
 
 import { Face, Polytop, Silhouette } from './math';
 import { PriorityQueue } from './priority-queue';
+import { TransformableInterface } from './shape';
 
 const createTetrahedron = (
   w0: vec3,
@@ -156,7 +159,7 @@ const createInitialPolytop = (cloud: vec3[]): Polytop<vec3> => {
   return createTetrahedron(w0, w1, w2, w3);
 };
 
-const findFarthest = (face: Face<vec3>, cloud: vec3[], eps = 1.0e-6): vec3 => {
+const findFarthest = (face: Face<vec3>, cloud: vec3[], eps = 1.0e-3): vec3 => {
   let max = vec3.dot(face.closest, face.vertices[0]) + eps;
   let farthest: vec3 = null;
   for (let point of cloud) {
@@ -169,7 +172,7 @@ const findFarthest = (face: Face<vec3>, cloud: vec3[], eps = 1.0e-6): vec3 => {
   return farthest;
 };
 
-const cutCloud = (face: Face<vec3>, cloud: vec3[], eps = 1.0e-6): vec3[] => {
+const cutCloud = (face: Face<vec3>, cloud: vec3[], eps = 1.0e-3): vec3[] => {
   const points: vec3[] = [];
   const d = vec3.dot(face.closest, face.vertices[0]);
   for (let p of cloud) {
@@ -184,14 +187,16 @@ const getSilhouette = (
   out: Silhouette<vec3>,
   face: Face<vec3>,
   i: number,
-  support: vec3
+  support: vec3,
+  eps = 1.0e-3
 ) => {
   if (face.obsolete) {
     return;
   }
 
   if (
-    vec3.dot(face.closest, support) < vec3.dot(face.closest, face.vertices[0])
+    vec3.dot(face.closest, support) + eps <
+    vec3.dot(face.closest, face.vertices[0])
   ) {
     // not visible from support point, add to silhouette
     out.push([face, i]);
@@ -213,9 +218,45 @@ const getSilhouette = (
   }
 };
 
+export const getDifference = (
+  mesh0: Mesh,
+  transform0: TransformableInterface,
+  mesh1: Mesh,
+  transform1: TransformableInterface
+): Polytop<vec3> => {
+  const left = getPositions(mesh0).map(p =>
+    vec3.transformMat4(p, p, transform0.transform)
+  );
+  const right = getPositions(mesh1).map(p =>
+    vec3.transformMat4(p, p, transform1.transform)
+  );
+
+  const digits = 3;
+  const table = new Map<string, vec3>();
+
+  for (const a of left) {
+    for (const b of right) {
+      const diff = vec3.create();
+      vec3.subtract(diff, a, b);
+      const k = `${diff[0].toPrecision(digits)}-${diff[1].toPrecision(
+        digits
+      )}-${diff[2].toPrecision(digits)}`;
+
+      if (!table.has(k)) {
+        table.set(k, diff);
+      }
+    }
+  }
+
+  const cloud = Array.from(table.values());
+
+  return convexHull(cloud);
+};
+
 export const convexHull = (cloud: vec3[]): Polytop<vec3> => {
   const polytop = createInitialPolytop(cloud);
   // return polytop;
+
   const lookup = new Map<Face<vec3>, vec3[]>();
 
   for (let face of Array.from(polytop)) {
@@ -225,8 +266,7 @@ export const convexHull = (cloud: vec3[]): Polytop<vec3> => {
     }
   }
 
-  let m = 4096;
-
+  let m = 65535;
   while (lookup.size && --m > 0) {
     // find farsest
     const face = polytop.dequeue();
@@ -299,8 +339,8 @@ export const convexHull = (cloud: vec3[]): Polytop<vec3> => {
     last.siblings[1] = first;
   }
 
-  if(!m) {
-    console.warn('convexHull: Exceeded limit of itarations [1024]')
+  if (!m) {
+    console.warn(`convexHull: Exceeded limit of itarations [65535]`);
   }
 
   return polytop;

@@ -38,7 +38,8 @@ import {
   SupportPoint,
   ShapeInterface,
   convexHull,
-  Polytop
+  Polytop,
+  getDifference
 } from '../src';
 import { ObjectPanel, GjkPanel } from './panels';
 import { createShape, getPositions, toEuler } from './tools';
@@ -256,7 +257,6 @@ export default class implements ViewportInterface {
     );
 
     this.meshes = loadObj(objects);
-    const monkey = loadObj(suzanne);
     const phongShader = this.renderer.createShader(phongVertex, phongFragment);
     const flatShader = this.renderer.createShader(flatVertex, flatFragment);
     const icoGeometry = this.renderer.createGeometry(this.meshes['sphere']);
@@ -277,22 +277,14 @@ export default class implements ViewportInterface {
       );
     }
 
-    const cloud = getPositions(monkey['monkey']);
-    // const cloud = this.createCloud(512);
-    const hull = convexHull(cloud);
-    const hullGeometry = this.renderer.createGeometry(
-      this.createMeshFromPolytop(hull, false)
-    );
-
-    console.log(hull);
     this.drawables = [
       {
         material: {
-          shader: phongShader,
+          shader: flatShader,
           uniforms: { albedo: vec4.fromValues(1.0, 0.0, 0.0, 1.0) },
           state: {}
         },
-        geometry: hullGeometry,
+        geometry: gridGeometry,
         transform: new Transform()
       },
       {
@@ -367,8 +359,22 @@ export default class implements ViewportInterface {
         )
       )
       .subscribe(mode => (this.axes1.mode = this.axes2.mode = mode));
-  }
 
+    fromEvent(document, 'keydown')
+      .pipe(filter((e: KeyboardEvent) => ['h'].includes(e.key)))
+      .subscribe(() => {
+        const hull = getDifference(
+          this.meshes[this.object1Panel.state.objectType],
+          this.axes1.targetTransform,
+          this.meshes[this.object2Panel.state.objectType],
+          this.axes2.targetTransform
+        );
+        this.drawables[0].geometry = this.renderer.createGeometry(
+          this.createMeshFromPolytop(hull, true),
+          WebGL2RenderingContext.LINES
+        );
+      });
+  }
 
   private createMeshFromPolytop(polytop: Polytop<vec3>, wired = true): Mesh {
     const vertexData = [];
