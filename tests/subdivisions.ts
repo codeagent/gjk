@@ -16,21 +16,15 @@ import {
   Transform,
   AxesController
 } from '../graphics';
-
 import {
-  vertex as phongVertex,
-  fragment as phongFragment
-} from '../shaders/phong';
-
-import {
-  vertex as flatVertex,
-  fragment as flatFragment
-} from '../shaders/flat';
-
-import objects from '../objects/objects.obj';
-
+  phongVertex,
+  phongFragment,
+  flatVertex,
+  flatFragment
+} from '../shaders';
+import { objects } from '../objects';
 import { ObjectPanel } from './panels';
-import { createShape, toEuler } from './tools';
+import { createShape, toEuler, createMeshFromPolytop } from './tools';
 import {
   Polytop,
   createHexahedronFromLineSegment,
@@ -41,7 +35,6 @@ import {
   subdivide,
   checkAdjacency
 } from '../src';
-import { createMeshFromPolytop } from './tools';
 
 export default class implements ViewportInterface {
   private renderer: Renderer;

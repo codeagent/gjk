@@ -20,17 +20,13 @@ import {
 } from '../graphics';
 
 import {
-  vertex as phongVertex,
-  fragment as phongFragment
-} from '../shaders/phong';
+  phongVertex,
+  phongFragment,
+  flatVertex,
+  flatFragment
+} from '../shaders';
 
-import {
-  vertex as flatVertex,
-  fragment as flatFragment
-} from '../shaders/flat';
-
-import objects from '../objects/objects.obj';
-import suzanne from '../objects/monkey.obj';
+import { objects, monkey as suzanne } from '../objects';
 
 import {
   areIntersect,

@@ -19,16 +19,13 @@ import {
 } from '../graphics';
 
 import {
-  vertex as phongVertex,
-  fragment as phongFragment
-} from '../shaders/phong';
+  phongVertex,
+  phongFragment,
+  flatVertex,
+  flatFragment
+} from '../shaders';
 
-import {
-  vertex as flatVertex,
-  fragment as flatFragment
-} from '../shaders/flat';
-
-import objects from '../objects/objects.obj';
+import { objects } from '../objects';
 
 import { areIntersect, SupportPoint, ShapeInterface } from '../src';
 import { ObjectPanel, GjkPanel } from './panels';

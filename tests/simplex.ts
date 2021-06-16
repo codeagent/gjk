@@ -12,19 +12,13 @@ import {
   Geometry,
   loadObj
 } from '../graphics';
-
 import {
-  vertex as phongVertex,
-  fragment as phongFragment
-} from '../shaders/phong';
-
-import {
-  vertex as flatVertex,
-  fragment as flatFragment
-} from '../shaders/flat';
-
-import objects from '../objects/objects.obj';
-
+  phongVertex,
+  phongFragment,
+  flatVertex,
+  flatFragment
+} from '../shaders';
+import { objects } from '../objects';
 import { createSegment, createTetra, createTriangle } from './tools';
 import { Simplex, SupportPoint } from '../src';
 

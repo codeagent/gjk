@@ -3,18 +3,16 @@ import { fromEvent, Subject, merge } from 'rxjs';
 import { filter, map, takeUntil } from 'rxjs/operators';
 
 import { Drawable, Material, Renderer, Shader } from '../renderer';
-import { vertex as idVertex, fragment as idFragment } from '../../shaders/id';
 import {
-  vertex as phongVertex,
-  fragment as phongFragment
-} from '../../shaders/phong';
-import {
-  vertex as flatVertex,
-  fragment as flatFragment
-} from '../../shaders/flat';
-
+  idVertex,
+  idFragment,
+  phongVertex,
+  phongFragment,
+  flatVertex,
+  flatFragment
+} from '../../shaders';
 import { Camera } from '../camera';
-import axes from '../../objects/axes.obj';
+import { axes } from '../../objects';
 import { loadObj } from '../loader';
 import { Transform } from '../transform';
 import {

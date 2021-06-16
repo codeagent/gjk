@@ -3,7 +3,6 @@ import { map, filter, bufferTime, takeUntil } from 'rxjs/operators';
 import { quat, vec3, vec4 } from 'gl-matrix';
 
 import { ViewportInterface } from './viewport.interface';
-
 import {
   ArcRotationCameraController,
   Camera,
@@ -17,19 +16,13 @@ import {
   Transform,
   AxesController
 } from '../graphics';
-
 import {
-  vertex as phongVertex,
-  fragment as phongFragment
-} from '../shaders/phong';
-
-import {
-  vertex as flatVertex,
-  fragment as flatFragment
-} from '../shaders/flat';
-
-import objects from '../objects/objects.obj';
-
+  phongVertex,
+  phongFragment,
+  flatVertex,
+  flatFragment
+} from '../shaders';
+import { objects } from '../objects';
 import { closestPoints, SupportPoint, ShapeInterface } from '../src';
 import { ObjectPanel, GjkPanel } from './panels';
 import { createShape, toEuler } from './tools';
