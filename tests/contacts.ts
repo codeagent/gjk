@@ -30,6 +30,7 @@ import {
 } from '../shaders/flat';
 
 import objects from '../objects/objects.obj';
+import suzanne from '../objects/monkey.obj';
 
 import {
   areIntersect,
@@ -255,6 +256,7 @@ export default class implements ViewportInterface {
     );
 
     this.meshes = loadObj(objects);
+    const monkey = loadObj(suzanne);
     const phongShader = this.renderer.createShader(phongVertex, phongFragment);
     const flatShader = this.renderer.createShader(flatVertex, flatFragment);
     const icoGeometry = this.renderer.createGeometry(this.meshes['sphere']);
@@ -275,7 +277,7 @@ export default class implements ViewportInterface {
       );
     }
 
-    const cloud = getPositions(this.meshes['sphere']);
+    const cloud = getPositions(monkey['monkey']);
     // const cloud = this.createCloud(512);
     const hull = convexHull(cloud);
     const hullGeometry = this.renderer.createGeometry(
@@ -367,13 +369,7 @@ export default class implements ViewportInterface {
       .subscribe(mode => (this.axes1.mode = this.axes2.mode = mode));
   }
 
-  private createCloud(n: number) {
-    const cloud = [];
-    while (n--) {
-      cloud.push(vec3.random(vec3.create(), Math.random() * 4 + 1));
-    }
-    return cloud;
-  }
+
   private createMeshFromPolytop(polytop: Polytop<vec3>, wired = true): Mesh {
     const vertexData = [];
     const indexData = [];

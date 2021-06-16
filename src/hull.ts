@@ -1,14 +1,6 @@
 import { vec3 } from 'gl-matrix';
 
-import {
-  Face,
-  fromBarycentric,
-  getSilhouette,
-  origin,
-  Polytop,
-  projectToTriangle,
-  Silhouette
-} from './math';
+import { Face, Polytop, Silhouette } from './math';
 import { PriorityQueue } from './priority-queue';
 
 const createTetrahedron = (
@@ -90,21 +82,12 @@ const createTetrahedron = (
     (a: Face<vec3>, b: Face<vec3>) => -1
   );
 
+  const a = vec3.create();
   for (let face of [face0, face1, face2, face3]) {
-    projectToTriangle(
-      face.closestBary,
-      face.vertices[0],
-      face.vertices[1],
-      face.vertices[2],
-      origin
-    );
-    fromBarycentric(
-      face.closest,
-      face.closestBary,
-      face.vertices[0],
-      face.vertices[1],
-      face.vertices[2]
-    );
+    vec3.sub(a, face.vertices[1], face.vertices[0]);
+    vec3.sub(face.closest, face.vertices[2], face.vertices[0]);
+    vec3.cross(face.closest, a, face.closest);
+    vec3.normalize(face.closest, face.closest);
     queue.enqueue(face);
   }
 
@@ -173,12 +156,11 @@ const createInitialPolytop = (cloud: vec3[]): Polytop<vec3> => {
   return createTetrahedron(w0, w1, w2, w3);
 };
 
-const findFarthest = (face: Face<vec3>, cloud: vec3[]): vec3 => {
-  let max = 1.0e-3;
+const findFarthest = (face: Face<vec3>, cloud: vec3[], eps = 1.0e-6): vec3 => {
+  let max = vec3.dot(face.closest, face.vertices[0]) + eps;
   let farthest: vec3 = null;
-  const d = vec3.dot(face.closest, face.vertices[0]);
   for (let point of cloud) {
-    const dist = vec3.dot(point, face.closest) - d;
+    const dist = vec3.dot(point, face.closest);
     if (max < dist) {
       farthest = point;
       max = dist;
@@ -187,15 +169,48 @@ const findFarthest = (face: Face<vec3>, cloud: vec3[]): vec3 => {
   return farthest;
 };
 
-const cutCloud = (face: Face<vec3>, cloud: vec3[], eps = 1.0e-3): vec3[] => {
+const cutCloud = (face: Face<vec3>, cloud: vec3[], eps = 1.0e-6): vec3[] => {
   const points: vec3[] = [];
   const d = vec3.dot(face.closest, face.vertices[0]);
   for (let p of cloud) {
-    if (vec3.dot(face.closest, p) - d > eps) {
+    if (vec3.dot(face.closest, p) > d + eps) {
       points.push(p);
     }
   }
   return points;
+};
+
+const getSilhouette = (
+  out: Silhouette<vec3>,
+  face: Face<vec3>,
+  i: number,
+  support: vec3
+) => {
+  if (face.obsolete) {
+    return;
+  }
+
+  if (
+    vec3.dot(face.closest, support) < vec3.dot(face.closest, face.vertices[0])
+  ) {
+    // not visible from support point, add to silhouette
+    out.push([face, i]);
+  } else {
+    face.obsolete = true;
+
+    getSilhouette(
+      out,
+      face.siblings[(i + 1) % 3],
+      face.adjacent[(i + 1) % 3],
+      support
+    );
+    getSilhouette(
+      out,
+      face.siblings[(i + 2) % 3],
+      face.adjacent[(i + 2) % 3],
+      support
+    );
+  }
 };
 
 export const convexHull = (cloud: vec3[]): Polytop<vec3> => {
@@ -210,7 +225,7 @@ export const convexHull = (cloud: vec3[]): Polytop<vec3> => {
     }
   }
 
-  let m = 130;
+  let m = 4096;
 
   while (lookup.size && --m > 0) {
     // find farsest
@@ -219,13 +234,10 @@ export const convexHull = (cloud: vec3[]): Polytop<vec3> => {
     const farthest = points ? findFarthest(face, points) : null;
     lookup.delete(face);
 
-    
-    if (!points) {
+    if (!points || !farthest) {
       polytop.enqueue(face);
       continue;
     }
-
-    console.log(farthest)
 
     // fibd silhuette from farthest point
     face.obsolete = true;
@@ -245,7 +257,7 @@ export const convexHull = (cloud: vec3[]): Polytop<vec3> => {
     // create cone
     let last: Face<vec3> = null;
     let first: Face<vec3> = null;
-
+    const a = vec3.create();
     for (let [face, i] of silhouette) {
       const p0 = face.vertices[(i + 1) % 3];
       const p1 = face.vertices[i];
@@ -260,26 +272,17 @@ export const convexHull = (cloud: vec3[]): Polytop<vec3> => {
         obsolete: false
       };
 
-      projectToTriangle(
-        curr.closestBary,
-        curr.vertices[0],
-        curr.vertices[1],
-        curr.vertices[2],
-        origin
-      );
-      fromBarycentric(
-        curr.closest,
-        curr.closestBary,
-        curr.vertices[0],
-        curr.vertices[1],
-        curr.vertices[2]
-      );
+      vec3.sub(a, curr.vertices[1], curr.vertices[0]);
+      vec3.sub(curr.closest, curr.vertices[2], curr.vertices[0]);
+      vec3.cross(curr.closest, a, curr.closest);
+      vec3.normalize(curr.closest, curr.closest);
 
       face.siblings[i] = curr;
       face.adjacent[i] = 0;
 
       polytop.enqueue(curr);
-      const cut = cutCloud(curr, points);
+
+      const cut = cutCloud(curr, cloud);
       if (cut.length) {
         lookup.set(curr, cut);
       }
@@ -294,6 +297,10 @@ export const convexHull = (cloud: vec3[]): Polytop<vec3> => {
 
     first.siblings[2] = last;
     last.siblings[1] = first;
+  }
+
+  if(!m) {
+    console.warn('convexHull: Exceeded limit of itarations [1024]')
   }
 
   return polytop;
