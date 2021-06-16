@@ -120,7 +120,7 @@ export const contactPoints = (
 
   for (let f of polytop) {
     if (isNaN(f.closest[0]) || isNaN(f.closest[1]) || isNaN(f.closest[2])) {
-      debugger;
+      // debugger;
     }
   }
 

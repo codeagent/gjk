@@ -1,4 +1,6 @@
 import { vec3, vec4 } from 'gl-matrix';
+import { Observable, merge, of } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 import { ViewportInterface } from './viewport.interface';
 import {
@@ -10,7 +12,8 @@ import {
   Transform,
   Shader,
   Geometry,
-  loadObj
+  loadObj,
+  MeshCollection
 } from '../graphics';
 import {
   phongVertex,
@@ -20,19 +23,22 @@ import {
 } from '../shaders';
 import { objects } from '../objects';
 import { createSegment, createTetra, createTriangle } from './tools';
-import { Simplex, SupportPoint } from '../src';
+import { getDifference, Simplex, SupportPoint } from '../src';
 
-export default class implements ViewportInterface {
+export class SimplexView implements ViewportInterface {
   private renderer: Renderer;
   private cameraController: ArcRotationCameraController;
   private drawables: Drawable[] = [];
   private connected = false;
-
+  private meshes: MeshCollection;
   private phongShader: Shader;
   private flatShader: Shader;
   private sphere: Geometry;
 
-  constructor(private readonly simplex: Simplex<SupportPoint>) {}
+  constructor(
+    private readonly simplex: Simplex<SupportPoint>,
+    private readonly change$: Observable<void>
+  ) {}
 
   connect(canvas: HTMLCanvasElement): void {
     if (!this.renderer) {
@@ -67,48 +73,6 @@ export default class implements ViewportInterface {
 
   private update() {
     this.cameraController.update();
-    if (this.simplex) {
-      if (this.drawables[1].geometry) {
-        this.renderer.destroyGeometry(this.drawables[1].geometry);
-      }
-      this.drawables[1].geometry = null;
-      this.drawables = [this.drawables[0], this.drawables[1]];
-
-      const material = {
-        shader: this.phongShader,
-        uniforms: {
-          albedo: vec4.fromValues(1.0, 1.0, 1.0, 1.0)
-        },
-        state: { cullFace: false }
-      };
-      for (let p of Array.from(this.simplex)) {
-        this.drawables.push({
-          material,
-          geometry: this.sphere,
-          transform: new Transform(p.diff, vec3.fromValues(0.1, 0.1, 0.1))
-        });
-      }
-
-      if (this.simplex.size === 2) {
-        const [w0, w1] = Array.from(this.simplex);
-        this.drawables[1].geometry = this.renderer.createGeometry(
-          createSegment(w0.diff, w1.diff),
-          WebGL2RenderingContext.LINES
-        );
-      } else if (this.simplex.size === 3) {
-        const [w0, w1, w2] = Array.from(this.simplex);
-        this.drawables[1].geometry = this.renderer.createGeometry(
-          createTriangle(w0.diff, w1.diff, w2.diff),
-          WebGL2RenderingContext.LINES
-        );
-      } else if (this.simplex.size === 4) {
-        const [w0, w1, w2, w3] = Array.from(this.simplex);
-        this.drawables[1].geometry = this.renderer.createGeometry(
-          createTetra(w0.diff, w1.diff, w2.diff, w3.diff),
-          WebGL2RenderingContext.LINES
-        );
-      }
-    }
   }
 
   private boostrap(canvas: HTMLCanvasElement) {
@@ -118,8 +82,8 @@ export default class implements ViewportInterface {
       })
     );
 
-    const meshes = loadObj(objects);
-    this.sphere = this.renderer.createGeometry(meshes['sphere']);
+    this.meshes = loadObj(objects);
+    this.sphere = this.renderer.createGeometry(this.meshes['sphere']);
     this.phongShader = this.renderer.createShader(phongVertex, phongFragment);
     this.flatShader = this.renderer.createShader(flatVertex, flatFragment);
     const gridGeometry = this.renderer.createGeometry(
@@ -151,7 +115,83 @@ export default class implements ViewportInterface {
         },
         geometry: null,
         transform: new Transform()
+      },
+      {
+        material: {
+          shader: this.phongShader,
+          uniforms: {
+            albedo: vec4.fromValues(1.0, 1.0, 0.8, 1.0)
+          },
+          state: { cullFace: false }
+        },
+        geometry: null,
+        transform: new Transform()
       }
     ];
+
+    this.change$.pipe(debounceTime(500)).subscribe(() => {
+      this.drawables = this.drawables.slice(0, 3);
+      this.updateSimplex();
+    });
   }
+
+  private updateSimplex() {
+    if (!this.simplex) {
+      return;
+    }
+
+    if (this.drawables[1].geometry) {
+      this.renderer.destroyGeometry(this.drawables[1].geometry);
+    }
+
+    const material = {
+      shader: this.phongShader,
+      uniforms: {
+        albedo: vec4.fromValues(1.0, 1.0, 1.0, 1.0)
+      },
+      state: { cullFace: false }
+    };
+    for (let p of Array.from(this.simplex)) {
+      this.drawables.push({
+        material,
+        geometry: this.sphere,
+        transform: new Transform(p.diff, vec3.fromValues(0.1, 0.1, 0.1))
+      });
+    }
+
+    this.drawables[1].geometry = null;
+    if (this.simplex.size === 2) {
+      const [w0, w1] = Array.from(this.simplex);
+      this.drawables[1].geometry = this.renderer.createGeometry(
+        createSegment(w0.diff, w1.diff),
+        WebGL2RenderingContext.LINES
+      );
+    } else if (this.simplex.size === 3) {
+      const [w0, w1, w2] = Array.from(this.simplex);
+      this.drawables[1].geometry = this.renderer.createGeometry(
+        createTriangle(w0.diff, w1.diff, w2.diff),
+        WebGL2RenderingContext.LINES
+      );
+    } else if (this.simplex.size === 4) {
+      const [w0, w1, w2, w3] = Array.from(this.simplex);
+      this.drawables[1].geometry = this.renderer.createGeometry(
+        createTetra(w0.diff, w1.diff, w2.diff, w3.diff),
+        WebGL2RenderingContext.LINES
+      );
+    }
+  }
+
+  // private updateHull() {
+  //   const
+  //   const cloud = getDifference(
+  //     this.meshes[this.object1Panel.state.objectType],
+  //     this.axes1.targetTransform,
+  //     this.meshes[this.object2Panel.state.objectType],
+  //     this.axes2.targetTransform
+  //   );
+  //   this.drawables[0].geometry = this.renderer.createGeometry(
+  //     this.createMeshFromPolytop(hull, true),
+  //     WebGL2RenderingContext.LINES
+  //   );
+  // }
 }

@@ -223,7 +223,7 @@ export const getDifference = (
   transform0: TransformableInterface,
   mesh1: Mesh,
   transform1: TransformableInterface
-): Polytop<vec3> => {
+): vec3[] => {
   const left = getPositions(mesh0).map(p =>
     vec3.transformMat4(p, p, transform0.transform)
   );
@@ -248,9 +248,7 @@ export const getDifference = (
     }
   }
 
-  const cloud = Array.from(table.values());
-
-  return convexHull(cloud);
+  return Array.from(table.values());
 };
 
 export const convexHull = (cloud: vec3[]): Polytop<vec3> => {
