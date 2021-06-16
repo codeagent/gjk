@@ -17,9 +17,9 @@ const closestsView = new ClosestsView();
 const subdivisionTest = new SubdivisionsTest();
 const contactsView = new ContactsView();
 
-const intersectionSimplexView = new SimplexView(intersectionView.simplex, intersectionView.changed$);
-const closestsSimplexView = new SimplexView(closestsView.simplex, closestsView.changed$);
-const contactsSimplexView = new SimplexView(contactsView.simplex, contactsView.changed$);
+const intersectionSimplexView = new SimplexView(intersectionView);
+const closestsSimplexView = new SimplexView(closestsView);
+const contactsSimplexView = new SimplexView(contactsView);
 
 let active:ViewportInterface[] = [];
 

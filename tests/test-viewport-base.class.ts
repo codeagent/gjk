@@ -35,6 +35,14 @@ import { createShape, toEuler } from './tools';
 export default abstract class TestViewportBase implements ViewportInterface {
   public readonly simplex = new Set<SupportPoint>();
 
+  get axes1() {
+    return this._axes1;
+  }
+
+  get axes2() {
+    return this._axes2;
+  }
+
   get changed$() {
     return this._changed$.asObservable();
   }
@@ -42,8 +50,6 @@ export default abstract class TestViewportBase implements ViewportInterface {
   protected renderer: Renderer;
   protected meshes: MeshCollection;
   protected idFrameBuffer: RenderTarget;
-  protected axes1: AxesController;
-  protected axes2: AxesController;
   protected object1Panel: ObjectPanel;
   protected object2Panel: ObjectPanel;
   protected gjkPanel: GjkPanel;
@@ -52,8 +58,9 @@ export default abstract class TestViewportBase implements ViewportInterface {
   protected geometries = new Map<string, Geometry>();
   protected shape1: ShapeInterface;
   protected shape2: ShapeInterface;
+  protected _axes1: AxesController;
+  protected _axes2: AxesController;
   protected phongShader: Shader;
-
   protected flatShader: Shader;
   protected connected = false;
   protected dt = 0;
@@ -252,12 +259,12 @@ export default abstract class TestViewportBase implements ViewportInterface {
       }
     ];
 
-    this.axes1 = new AxesController(
+    this._axes1 = new AxesController(
       this.renderer,
       camera,
       this.drawables[1].transform
     );
-    this.axes2 = new AxesController(
+    this._axes2 = new AxesController(
       this.renderer,
       camera,
       this.drawables[2].transform

@@ -42,6 +42,6 @@ void main()
   }
 
   float nol = d * 0.7 + 0.3;
-  color = vec4(c, 1.0) * vec4(vec3(nol), 1.0f);
+  color = vec4(c, albedo.a) * vec4(vec3(nol), 1.0f);
 }
 `;

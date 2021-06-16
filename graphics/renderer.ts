@@ -215,9 +215,7 @@ export class Renderer {
     this._gl.bindBuffer(WebGL2RenderingContext.ELEMENT_ARRAY_BUFFER, drawable.geometry.ebo);
     this._gl.bindBuffer(WebGL2RenderingContext.ARRAY_BUFFER, drawable.geometry.vbo);
 
-    if(this._gl.getError() !== WebGL2RenderingContext.NO_ERROR ) {
-      debugger;
-    }
+
     this._gl.drawElements(
       drawable.geometry.type ?? WebGL2RenderingContext.TRIANGLES,
       drawable.geometry.length,
@@ -225,9 +223,7 @@ export class Renderer {
       0
     );
 
-    if(this._gl.getError() !== WebGL2RenderingContext.NO_ERROR ) {
-      debugger;
-    }
+  
   }
 
   createIdRenderTarget(): RenderTarget {
