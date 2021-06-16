@@ -164,16 +164,6 @@ export default class implements ViewportInterface {
     this.axes1.update(pixes);
     this.axes2.update(pixes);
 
-    this.object1Panel.write({
-      ...this.object1Panel.state,
-      position: this.axes1.targetTransform.position,
-      orientation: toEuler(this.axes1.targetTransform.rotation)
-    });
-    this.object2Panel.write({
-      ...this.object2Panel.state,
-      position: this.axes2.targetTransform.position,
-      orientation: toEuler(this.axes2.targetTransform.rotation)
-    });
     this.gjkPanel.write({
       ...this.gjkPanel.state,
       simplexSize: this.simplex.size,
@@ -275,6 +265,21 @@ export default class implements ViewportInterface {
       this.renderer,
       camera,
       this.drawables[2].transform
+    );
+
+    this.axes1.action$.subscribe(() =>
+      this.object1Panel.write({
+        ...this.object1Panel.state,
+        position: this.axes1.targetTransform.position,
+        orientation: toEuler(this.axes1.targetTransform.rotation)
+      })
+    );
+    this.axes2.action$.subscribe(() =>
+      this.object2Panel.write({
+        ...this.object2Panel.state,
+        position: this.axes2.targetTransform.position,
+        orientation: toEuler(this.axes2.targetTransform.rotation)
+      })
     );
 
     fromEvent(document, 'keydown')

@@ -45,21 +45,15 @@ export class GjkPanel {
     this.iterations = element.querySelector<HTMLInputElement>('input.i');
     this.epsilon = element.querySelector<HTMLInputElement>('input.e');
 
-    merge(
-      fromEvent(this.iterations, 'input').pipe(
+    merge(fromEvent(this.iterations, 'input'), fromEvent(this.epsilon, 'input'))
+      .pipe(
+        takeUntil(this.release$),
         map(() => ({
-          ...this.state$.value,
+          epsilon: +this.epsilon.value,
           maxIterations: +this.iterations.value
         }))
-      ),
-      fromEvent(this.epsilon, 'input').pipe(
-        map(() => ({
-          ...this.state$.value,
-          epsilon: +this.epsilon.value
-        }))
       )
-    )
-      .pipe(takeUntil(this.release$))
+
       .subscribe((options: GjkPanelOptions) => this.state$.next(options));
   }
 

@@ -52,52 +52,41 @@ export class ObjectPanel {
     this.rz = element.querySelector<HTMLInputElement>('input.rz');
 
     merge(
-      fromEvent(this.type, 'change').pipe(
-        map(() => ({ ...this.state$.value, objectType: this.type.value }))
-      ),
-
-      merge(
-        fromEvent(this.x, 'input'),
-        fromEvent(this.y, 'input'),
-        fromEvent(this.z, 'input')
-      ).pipe(
+      fromEvent(this.type, 'change'),
+      fromEvent(this.x, 'input'),
+      fromEvent(this.y, 'input'),
+      fromEvent(this.z, 'input'),
+      fromEvent(this.rx, 'input'),
+      fromEvent(this.ry, 'input'),
+      fromEvent(this.rz, 'input')
+    )
+      .pipe(
+        takeUntil(this.release$),
         map(() => ({
-          ...this.state$.value,
+          objectType: this.type.value,
+          orientation: vec3.fromValues(
+            round(+this.rx.value),
+            round(+this.ry.value),
+            round(+this.rz.value)
+          ),
           position: vec3.fromValues(
             round(+this.x.value),
             round(+this.y.value),
             round(+this.z.value)
           )
         }))
-      ),
-
-      merge(
-        fromEvent(this.rx, 'input'),
-        fromEvent(this.ry, 'input'),
-        fromEvent(this.rz, 'input')
-      ).pipe(
-        map(() => ({
-          ...this.state$.value,
-          orientation: vec3.fromValues(
-            round(+this.rx.value),
-            round(+this.ry.value),
-            round(+this.rz.value)
-          )
-        }))
       )
-    )
-      .pipe(takeUntil(this.release$))
       .subscribe((options: ObjectPanelOptions) => this.state$.next(options));
   }
 
   write(options: ObjectPanelOptions) {
     this.type.value = options.objectType;
-    this.x.setAttribute('value', options.position[0].toFixed(2));
-    this.y.setAttribute('value', options.position[1].toFixed(2));
-    this.z.setAttribute('value', options.position[2].toFixed(2));
-    this.rx.setAttribute('value', options.orientation[0].toFixed(2));
-    this.ry.setAttribute('value', options.orientation[1].toFixed(2));
-    this.rz.setAttribute('value', options.orientation[2].toFixed(2));
+    this.x.value = options.position[0].toFixed(2);
+    this.y.value = options.position[1].toFixed(2);
+    this.z.value = options.position[2].toFixed(2);
+    this.rx.value = options.orientation[0].toFixed(2);
+    this.ry.value = options.orientation[1].toFixed(2);
+    this.rz.value = options.orientation[2].toFixed(2);
   }
 
   onChanges() {
