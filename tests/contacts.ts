@@ -26,18 +26,15 @@ export class ContactsView extends TestViewportBase {
     );
 
     if (hasIntersection) {
-      try {
-        contactPoints(
-          this.contactPoints,
-          this.shape1,
-          this.shape2,
-          this.simplex,
-          this.gjkPanel.state.epsilon,
-          this.gjkPanel.state.maxIterations
-        );
-      } catch (e) {
-        console.error(e);
-      }
+      contactPoints(
+        this.contactPoints,
+        this.shape1,
+        this.shape2,
+        this.simplex,
+        this.gjkPanel.state.epsilon,
+        this.gjkPanel.state.maxIterations
+      );
+
       this.drawables[3].transform.position = this.contactPoints[0];
       this.drawables[4].transform.position = this.contactPoints[1];
     } else {

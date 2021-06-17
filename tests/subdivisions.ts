@@ -145,6 +145,7 @@ export default class implements ViewportInterface {
     this.shape = this.createShape('sphere');
     this.polytop = this.createPolytop();
 
+
     this.drawables = [
       {
         material: {

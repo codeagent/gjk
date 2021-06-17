@@ -115,13 +115,9 @@ export const contactPoints = (
   const polytop = createPolytopFromSimplex(simplex, minkowski);
 
   if (!polytop) {
+    vec3.set(out[0], 0.0, 0.0, 0.0);
+    vec3.set(out[1], 0.0, 0.0, 0.0);
     return 0.0;
-  }
-
-  for (let f of polytop) {
-    if (isNaN(f.closest[0]) || isNaN(f.closest[1]) || isNaN(f.closest[2])) {
-      // debugger;
-    }
   }
 
   epsilon = epsilon * epsilon;
@@ -163,6 +159,12 @@ export const contactPoints = (
         face.adjacent[i],
         support.diff
       );
+    }
+
+    if (!silhouette.length) {
+      vec3.set(out[0], 0.0, 0.0, 0.0);
+      vec3.set(out[1], 0.0, 0.0, 0.0);
+      return 0.0;
     }
 
     // in real epa algorithm use obsolete flag to completly ignore the face
@@ -239,11 +241,10 @@ export const contactPoints = (
       face.vertices[2].support1
     );
 
-    // out[0] = support.support0;
-    // out[1] = support.support1;
-
     return vec3.distance(out[0], out[1]);
   } else {
+    vec3.set(out[0], 0.0, 0.0, 0.0);
+    vec3.set(out[1], 0.0, 0.0, 0.0);
     return 0.0;
   }
 };

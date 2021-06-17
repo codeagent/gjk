@@ -632,13 +632,13 @@ export const createHexahedronFromLineSegment = (
   vec3.subtract(w3w4, w3.diff, w4.diff);
 
   // find convenient axis
-  let min = w3w4[0];
+  let min = Math.abs(w3w4[0]);
   let axis = vec3.fromValues(1.0, 0.0, 0.0);
-  if (w3w4[1] < min) {
-    min = w3w4[1];
+  if (Math.abs(w3w4[1]) < min) {
+    min = Math.abs(w3w4[1]);
     vec3.set(axis, 0.0, 1.0, 0.0);
   }
-  if (w3w4[2] < min) {
+  if (Math.abs(w3w4[2]) < min) {
     vec3.set(axis, 0.0, 0.0, 1.0);
   }
 
@@ -660,7 +660,7 @@ export const createHexahedronFromLineSegment = (
 
   // find w1 and w2 by repeatedly rotation at 120 degrees
   const vw1 = vec3.create();
-  vec3.transformQuat(vw1, w0.diff, q);
+  vec3.transformQuat(vw1, vw0, q);
   const w1 = shape.support(
     {
       support0: vec3.create(),
@@ -671,7 +671,7 @@ export const createHexahedronFromLineSegment = (
   );
 
   const vw2 = vec3.create();
-  vec3.transformQuat(vw2, w1.diff, q);
+  vec3.transformQuat(vw2, vw1, q);
   const w2 = shape.support(
     {
       support0: vec3.create(),
@@ -822,91 +822,3 @@ export const getSilhouette = <T>(
     );
   }
 };
-
-export namespace Hull {
-  export const createTetrahedron = (
-    w0: vec3,
-    w1: vec3,
-    w2: vec3,
-    w3: vec3
-  ): Polytop<vec3> => {
-    const w1w0 = vec3.create();
-    const w2w0 = vec3.create();
-
-    vec3.subtract(w1w0, w1, w0);
-    vec3.subtract(w2w0, w2, w0);
-
-    const x = vec3.create();
-    vec3.cross(x, w2w0, w1w0);
-
-    const w3w0 = vec3.create();
-    vec3.subtract(w3w0, w3, w0);
-
-    // preserve ccw orientation: swap w1 and w2
-    if (vec3.dot(w3w0, x) > 0.0) {
-      const tmp = w2;
-      w2 = w1;
-      w1 = tmp;
-    }
-
-    const face0: Face<vec3> = {
-      vertices: [w0, w1, w3],
-      siblings: null,
-      adjacent: null,
-      distance: 0.0,
-      closest: null,
-      closestBary: null,
-      obsolete: false
-    };
-
-    const face1: Face<vec3> = {
-      vertices: [w1, w2, w3],
-      siblings: null,
-      adjacent: null,
-      distance: 0.0,
-      closest: null,
-      closestBary: null,
-      obsolete: false
-    };
-
-    const face2: Face<vec3> = {
-      vertices: [w2, w0, w3],
-      siblings: null,
-      adjacent: null,
-      distance: 0.0,
-      closest: null,
-      closestBary: null,
-      obsolete: false
-    };
-
-    const face3: Face<vec3> = {
-      vertices: [w1, w0, w2],
-      siblings: null,
-      adjacent: null,
-      distance: 0.0,
-      closest: null,
-      closestBary: null,
-      obsolete: false
-    };
-
-    face0.siblings = [face3, face1, face2];
-    face1.siblings = [face3, face2, face0];
-    face2.siblings = [face3, face0, face1];
-    face3.siblings = [face0, face2, face1];
-
-    face0.adjacent = [0, 2, 1];
-    face1.adjacent = [2, 2, 1];
-    face2.adjacent = [1, 2, 1];
-    face3.adjacent = [0, 0, 0];
-
-    const queue = new PriorityQueue<Face<vec3>>(
-      (a: Face<vec3>, b: Face<vec3>) => a.distance - b.distance
-    );
-
-    for (let face of [face0, face1, face2, face3]) {
-      queue.enqueue(face);
-    }
-
-    return queue;
-  };
-}

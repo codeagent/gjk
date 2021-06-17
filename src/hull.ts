@@ -159,7 +159,7 @@ const createInitialPolytop = (cloud: vec3[]): Polytop<vec3> => {
   return createTetrahedron(w0, w1, w2, w3);
 };
 
-const findFarthest = (face: Face<vec3>, cloud: vec3[], eps = 1.0e-3): vec3 => {
+const findFarthest = (face: Face<vec3>, cloud: vec3[], eps = 1.0e-5): vec3 => {
   let max = vec3.dot(face.closest, face.vertices[0]) + eps;
   let farthest: vec3 = null;
   for (let point of cloud) {
@@ -172,7 +172,7 @@ const findFarthest = (face: Face<vec3>, cloud: vec3[], eps = 1.0e-3): vec3 => {
   return farthest;
 };
 
-const cutCloud = (face: Face<vec3>, cloud: vec3[], eps = 1.0e-3): vec3[] => {
+const cutCloud = (face: Face<vec3>, cloud: vec3[], eps = 1.0e-5): vec3[] => {
   const points: vec3[] = [];
   const d = vec3.dot(face.closest, face.vertices[0]);
   for (let p of cloud) {
@@ -188,7 +188,7 @@ const getSilhouette = (
   face: Face<vec3>,
   i: number,
   support: vec3,
-  eps = 1.0e-3
+  eps = 1.0e-5
 ) => {
   if (face.obsolete) {
     return;
@@ -253,8 +253,6 @@ export const getDifference = (
 
 export const convexHull = (cloud: vec3[]): Polytop<vec3> => {
   const polytop = createInitialPolytop(cloud);
-  // return polytop;
-
   const lookup = new Map<Face<vec3>, vec3[]>();
 
   for (let face of Array.from(polytop)) {

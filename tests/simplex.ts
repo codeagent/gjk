@@ -132,7 +132,7 @@ export class SimplexView implements ViewportInterface {
           uniforms: {
             albedo: vec4.fromValues(0.0, 0.25, 1.0, 0.25)
           },
-          state: { zWrite: false }
+          state: {  }
         },
         geometry: null,
         transform: new Transform()
