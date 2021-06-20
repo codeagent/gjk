@@ -3,9 +3,8 @@ import { vec3 } from 'gl-matrix';
 import { Mesh } from '../graphics';
 import { getPositions } from '../tests';
 
-import { Face, Polytop, Silhouette } from '../src/math';
+import { TransformableInterface, Face, Polytop, Silhouette } from '../src';
 import { PriorityQueue } from '../src/priority-queue';
-import { TransformableInterface } from '../src//shape';
 
 const createTetrahedron = (
   w0: vec3,
@@ -101,7 +100,7 @@ const createTetrahedron = (
 const createInitialPolytop = (cloud: vec3[]): Polytop<vec3> => {
   let minX = cloud[0];
   let maxX = cloud[0];
-  let maxXDot = -Number.MIN_VALUE;
+  let maxXDot = Number.NEGATIVE_INFINITY;
   let minXDot = Number.MAX_VALUE;
   const X = vec3.fromValues(1.0, 0.0, 0.0);
 
@@ -128,7 +127,7 @@ const createInitialPolytop = (cloud: vec3[]): Polytop<vec3> => {
   // find w2
   const x = vec3.create();
   const y = vec3.create();
-  let max = -Number.MIN_VALUE;
+  let max = Number.NEGATIVE_INFINITY;
   let w2: vec3 = null;
   for (let p of cloud) {
     vec3.subtract(x, p, w0);
@@ -145,7 +144,7 @@ const createInitialPolytop = (cloud: vec3[]): Polytop<vec3> => {
   vec3.subtract(y, w2, w0);
   vec3.cross(x, w0w1, y);
   vec3.normalize(x, x);
-  max = -Number.MIN_VALUE;
+  max = Number.NEGATIVE_INFINITY;
   let w3: vec3 = null;
   for (let p of cloud) {
     vec3.subtract(y, p, w0);

@@ -25,16 +25,20 @@ export class ContactsView extends TestViewportBase {
       this.gjkPanel.state.maxIterations
     );
 
-    if (hasIntersection) {
-      contactPoints(
+    let distance = 0.0;
+    if (
+      hasIntersection &&
+      (distance = contactPoints(
         this.contactPoints,
         this.shape1,
         this.shape2,
         this.simplex,
         this.gjkPanel.state.epsilon,
         this.gjkPanel.state.maxIterations
-      );
+      ))
+    ) {
 
+      console.log(distance);
       this.drawables[3].transform.position = this.contactPoints[0];
       this.drawables[4].transform.position = this.contactPoints[1];
     } else {

@@ -1,9 +1,13 @@
-# gjk
+# gjk/epa 3D
 
-Objects approximation distance and intersection tests between two contex hulls using gjk algorithm
+(study)
+
+Objects approximation distance and intersection tests between two contex hulls using gjk algorithm in 3d space
 
 - closest points and distance
 - plain intersection test
+- contact points using EPA algorithm
+- box, sphere, cylinder, cone,  custom convex hull shapes
 
 ##  Useful resources
 - https://www.toptal.com/game/video-game-physics-part-ii-collision-detection-for-solid-objects
