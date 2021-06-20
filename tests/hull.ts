@@ -1,10 +1,11 @@
 import { vec3 } from 'gl-matrix';
+
 import { Mesh } from '../graphics';
 import { getPositions } from '../tests';
 
-import { Face, Polytop, Silhouette } from './math';
-import { PriorityQueue } from './priority-queue';
-import { TransformableInterface } from './shape';
+import { Face, Polytop, Silhouette } from '../src/math';
+import { PriorityQueue } from '../src/priority-queue';
+import { TransformableInterface } from '../src//shape';
 
 const createTetrahedron = (
   w0: vec3,

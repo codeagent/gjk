@@ -23,8 +23,9 @@ import {
 } from '../shaders';
 import { objects } from '../objects';
 import { createSegment, createTetra, createTriangle } from './tools';
-import { convexHull, getDifference, Polytop } from '../src';
+import { convexHull, getDifference } from './hull';
 import TestViewportBase from './test-viewport-base.class';
+import { Polytop } from '../src';
 
 export class SimplexView implements ViewportInterface {
   private renderer: Renderer;
@@ -132,7 +133,7 @@ export class SimplexView implements ViewportInterface {
           uniforms: {
             albedo: vec4.fromValues(0.0, 0.25, 1.0, 0.25)
           },
-          state: {  }
+          state: {}
         },
         geometry: null,
         transform: new Transform()
@@ -230,7 +231,7 @@ export class SimplexView implements ViewportInterface {
     }
   }
 
-  private createMeshFromPolytop(polytop: Polytop<vec3>, wired = true): Mesh {
+  private createMeshFromPolytop(polytop: Polytopp<vec3>, wired = true): Mesh {
     const vertexData = [];
     const indexData = [];
     const COLOR = [0.0, 0.0, 0.0];

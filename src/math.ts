@@ -796,13 +796,17 @@ export const getSilhouette = <T>(
   out: Silhouette<T>,
   face: Face<T>,
   i: number,
-  support: vec3
+  support: vec3,
+  eps = 1.0e-5
 ) => {
   if (face.obsolete) {
     return;
   }
 
-  if (vec3.dot(face.closest, support) < vec3.dot(face.closest, face.closest)) {
+  if (
+    vec3.dot(face.closest, support) + eps <
+    vec3.dot(face.closest, face.closest)
+  ) {
     // not visible from support point, add to silhouette
     out.push([face, i]);
   } else {

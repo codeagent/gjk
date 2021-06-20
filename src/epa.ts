@@ -157,7 +157,8 @@ export const contactPoints = (
         silhouette,
         face.siblings[i],
         face.adjacent[i],
-        support.diff
+        support.diff,
+        epsilon
       );
     }
 
