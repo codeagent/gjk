@@ -1,4 +1,4 @@
-import { vec3 } from 'gl-matrix';
+import { vec2, vec3 } from 'gl-matrix';
 
 import {
   isInsideTriangle,
@@ -12,7 +12,9 @@ import {
   fromBarycentric,
   createTetrahedron,
   createHexahedronFromTriangle,
-  createHexahedronFromLineSegment
+  createHexahedronFromLineSegment,
+  closestPointToTriangle,
+  closestPointToLineSegment
 } from './math';
 import { ShapeInterface, MinkowskiDifference } from './shape';
 
@@ -24,17 +26,6 @@ export const contactPoints = (
   epsilon = 1.0e-3,
   maxIterations = 25
 ): number => {
-  epsilon = epsilon * epsilon;
-
-  // early out
-  for (const w of simplex.values()) {
-    if (vec3.dot(w.diff, w.diff) < epsilon) {
-      vec3.set(out[0], 0.0, 0.0, 0.0);
-      vec3.set(out[1], 0.0, 0.0, 0.0);
-      return 0.0;
-    }
-  }
-
   const minkowski = new MinkowskiDifference(shape0, shape1);
   let polytop = null;
 
@@ -43,9 +34,25 @@ export const contactPoints = (
     polytop = createTetrahedron(w0, w1, w2, w3);
   } else if (simplex.size === 3) {
     const [w0, w1, w2] = Array.from(simplex);
+    const b = vec3.create();
+    closestPointToTriangle(b, w0.diff, w1.diff, w2.diff, origin);
+    if (b[0] === 0 || b[1] === 0 || b[2] === 0) {
+      // early out
+      vec3.set(out[0], 0.0, 0.0, 0.0);
+      vec3.set(out[1], 0.0, 0.0, 0.0);
+      return 0.0;
+    }
     polytop = createHexahedronFromTriangle(w0, w1, w2, minkowski);
   } else if (simplex.size === 2) {
     const [w0, w1] = Array.from(simplex);
+    const b = vec2.create();
+    closestPointToLineSegment(b, w0.diff, w1.diff, origin);
+    if (b[0] === 0 || b[1] === 0) {
+      // early out
+      vec3.set(out[0], 0.0, 0.0, 0.0);
+      vec3.set(out[1], 0.0, 0.0, 0.0);
+      return 0.0;
+    }
     polytop = createHexahedronFromLineSegment(w0, w1, minkowski);
   } else {
     // point should be origin itself.
@@ -53,6 +60,8 @@ export const contactPoints = (
     vec3.set(out[1], 0.0, 0.0, 0.0);
     return 0.0;
   }
+
+  epsilon = epsilon * epsilon;
 
   let face: Face = null;
   let support: SupportPoint;

@@ -44,22 +44,22 @@ export const closestPoints = (
       const p = Array.from(outSimplex.values());
       const b = vec2.create();
       closestPointToLineSegment(b, p[0].diff, p[1].diff, origin);
+      fromBarycentric(d, b, p[0].diff, p[1].diff);
       for (let i = 0; i < 2; i++) {
         if (b[i] === 0) {
           outSimplex.delete(p[i]);
         }
       }
-      fromBarycentric(d, b, p[0].diff, p[1].diff);
     } else if (outSimplex.size === 3) {
       const p = Array.from(outSimplex.values());
       const b = vec3.create();
       closestPointToTriangle(b, p[0].diff, p[1].diff, p[2].diff, origin);
+      fromBarycentric(d, b, p[0].diff, p[1].diff, p[2].diff);
       for (let i = 0; i < 3; i++) {
         if (b[i] === 0) {
           outSimplex.delete(p[i]);
         }
       }
-      fromBarycentric(d, b, p[0].diff, p[1].diff, p[2].diff);
     } else {
       const p = Array.from(outSimplex.values());
       const b = vec4.create();
@@ -74,12 +74,13 @@ export const closestPoints = (
       if (b[0] < 0 || b[1] < 0 || b[2] < 0 || b[3] < 0) {
         return 0.0;
       }
+      fromBarycentric(d, b, p[0].diff, p[1].diff, p[2].diff, p[3].diff);
+
       for (let i = 0; i < 4; i++) {
         if (b[i] === 0) {
           outSimplex.delete(p[i]);
         }
       }
-      fromBarycentric(d, b, p[0].diff, p[1].diff, p[2].diff, p[3].diff);
     }
 
     if (isNaN(d[0]) || isNaN(d[1]) || isNaN(d[2])) {
@@ -214,7 +215,7 @@ export const areIntersect = (
       }
 
       fromBarycentric(d, b, p[0].diff, p[1].diff, p[2].diff, p[3].diff);
-      
+
       for (let i = 0; i < 4; i++) {
         if (b[i] === 0) {
           outSimplex.delete(p[i]);
