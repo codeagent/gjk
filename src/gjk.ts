@@ -164,7 +164,6 @@ export const areIntersect = (
     if (outSimplex.size === 1) {
       const p = Array.from(outSimplex.values());
       vec3.copy(d, p[0].diff);
-
       // closest point is too close to origin
       if (vec3.dot(d, d) < epsilon) {
         return true;
@@ -173,31 +172,30 @@ export const areIntersect = (
       const p = Array.from(outSimplex.values());
       const b = vec2.create();
       closestPointToLineSegment(b, p[0].diff, p[1].diff, origin);
+      fromBarycentric(d, b, p[0].diff, p[1].diff);
+      // too close to line, return as having intersecton
+      if (vec3.dot(d, d) < epsilon) {
+        return true;
+      }
       for (let i = 0; i < 2; i++) {
         if (b[i] === 0) {
           outSimplex.delete(p[i]);
         }
       }
-      fromBarycentric(d, b, p[0].diff, p[1].diff);
-
-      // too close to line, return as having intersecton
-      if (vec3.dot(d, d) < epsilon) {
-        return true;
-      }
     } else if (outSimplex.size === 3) {
       const p = Array.from(outSimplex.values());
       const b = vec3.create();
       closestPointToTriangle(b, p[0].diff, p[1].diff, p[2].diff, origin);
+      fromBarycentric(d, b, p[0].diff, p[1].diff, p[2].diff);
+      // too close to triangle, return as having intersecton
+      if (vec3.dot(d, d) < epsilon) {
+        return true;
+      }
+
       for (let i = 0; i < 3; i++) {
         if (b[i] === 0) {
           outSimplex.delete(p[i]);
         }
-      }
-      fromBarycentric(d, b, p[0].diff, p[1].diff, p[2].diff);
-
-      // too close to triangle, return as having intersecton
-      if (vec3.dot(d, d) < epsilon) {
-        return true;
       }
     } else {
       const p = Array.from(outSimplex.values());
@@ -214,12 +212,14 @@ export const areIntersect = (
       if (b[0] < 0 || b[1] < 0 || b[2] < 0 || b[3] < 0) {
         return true;
       }
+
+      fromBarycentric(d, b, p[0].diff, p[1].diff, p[2].diff, p[3].diff);
+      
       for (let i = 0; i < 4; i++) {
         if (b[i] === 0) {
           outSimplex.delete(p[i]);
         }
       }
-      fromBarycentric(d, b, p[0].diff, p[1].diff, p[2].diff, p[3].diff);
     }
 
     if (isNaN(d[0]) || isNaN(d[1]) || isNaN(d[2])) {

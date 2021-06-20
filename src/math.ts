@@ -368,24 +368,6 @@ export const projectToTriangle = (
   vec3.set(out, wa / denom, wb / denom, wc / denom);
 };
 
-export const createPolytopFromSimplex = (
-  simplex: Simplex<SupportPoint>,
-  shape: ShapeInterface<SupportPoint>
-): Polytop => {
-  if (simplex.size == 4) {
-    const [w0, w1, w2, w3] = Array.from(simplex);
-    return createTetrahedron(w0, w1, w2, w3);
-  } else if (simplex.size === 3) {
-    const [w0, w1, w2] = Array.from(simplex);
-    return createHexahedronFromTriangle(w0, w1, w2, shape);
-  } else if (simplex.size === 2) {
-    const [w0, w1] = Array.from(simplex);
-    return createHexahedronFromLineSegment(w0, w1, shape);
-  } else {
-    return null;
-  }
-};
-
 export const createTetrahedron = (
   w0: SupportPoint,
   w1: SupportPoint,
