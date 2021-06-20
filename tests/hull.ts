@@ -101,7 +101,7 @@ const createTetrahedron = (
 const createInitialPolytop = (cloud: vec3[]): Polytop<vec3> => {
   let minX = cloud[0];
   let maxX = cloud[0];
-  let maxXDot = Number.MIN_VALUE;
+  let maxXDot = -Number.MIN_VALUE;
   let minXDot = Number.MAX_VALUE;
   const X = vec3.fromValues(1.0, 0.0, 0.0);
 
@@ -128,7 +128,7 @@ const createInitialPolytop = (cloud: vec3[]): Polytop<vec3> => {
   // find w2
   const x = vec3.create();
   const y = vec3.create();
-  let max = 0;
+  let max = -Number.MIN_VALUE;
   let w2: vec3 = null;
   for (let p of cloud) {
     vec3.subtract(x, p, w0);
@@ -145,7 +145,7 @@ const createInitialPolytop = (cloud: vec3[]): Polytop<vec3> => {
   vec3.subtract(y, w2, w0);
   vec3.cross(x, w0w1, y);
   vec3.normalize(x, x);
-  max = 0;
+  max = -Number.MIN_VALUE;
   let w3: vec3 = null;
   for (let p of cloud) {
     vec3.subtract(y, p, w0);

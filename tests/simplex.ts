@@ -231,7 +231,7 @@ export class SimplexView implements ViewportInterface {
     }
   }
 
-  private createMeshFromPolytop(polytop: Polytopp<vec3>, wired = true): Mesh {
+  private createMeshFromPolytop(polytop: Polytop<vec3>, wired = true): Mesh {
     const vertexData = [];
     const indexData = [];
     const COLOR = [0.0, 0.0, 0.0];

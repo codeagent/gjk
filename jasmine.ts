@@ -7,8 +7,8 @@ import 'jasmine-core/lib/jasmine-core/jasmine.css';
 import 'jasmine-core/lib/jasmine-core/jasmine-html.js';
 import 'jasmine-core/lib/jasmine-core/boot.js';
 
-import './gjk.spec';
-import './priority-queue.spec';
+import './src/math.spec';
+import './src/priority-queue.spec';
 
 (function bootstrap() {
   if (window.jasmineRef) {

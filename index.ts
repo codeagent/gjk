@@ -3,10 +3,10 @@ import 'uikit/dist/css/uikit.css';
 import 'uikit/dist/js/uikit.js';
 import './style.css';
 import { fromEvent, merge, of } from 'rxjs';
+
 import {  filter, mapTo } from 'rxjs/operators';
 
-import { IntersectionView, ClosestsView, SubdivisionsTest, ContactsView, SimplexView } from './tests';
-import { ViewportInterface } from './tests/viewport.interface';
+import { ViewportInterface, IntersectionView, ClosestsView,  ContactsView, SimplexView } from './tests';
 // import './jasmine';
 
 const objectsCanvas = document.getElementById('objects') as HTMLCanvasElement;
@@ -14,7 +14,7 @@ const simplexCanvas = document.getElementById('simpex') as HTMLCanvasElement;
 
 const intersectionView = new IntersectionView();
 const closestsView = new ClosestsView();
-const subdivisionTest = new SubdivisionsTest();
+
 const contactsView = new ContactsView();
 
 const intersectionSimplexView = new SimplexView(intersectionView);
@@ -30,10 +30,6 @@ merge(
 
   fromEvent(document.querySelector('[href="#/closests"]'), 'click').pipe(
     mapTo([closestsView, closestsSimplexView])
-  ),
-
-  fromEvent(document.querySelector('[href="#/subdivisions"]'), 'click').pipe(
-    mapTo([subdivisionTest])
   ),
 
    fromEvent(document.querySelector('[href="#/contacts"]'), 'click').pipe(
