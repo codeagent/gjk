@@ -34,6 +34,7 @@ import { createShape, toEuler } from './tools';
 
 export default abstract class TestViewportBase implements ViewportInterface {
   public readonly simplex = new Set<SupportPoint>();
+  public readonly debug: Set<SupportPoint>[] = [];
 
   get axes1() {
     return this._axes1;

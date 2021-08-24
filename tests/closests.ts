@@ -7,6 +7,7 @@ import TestViewportBase from './test-viewport-base.class';
 export class ClosestsView extends TestViewportBase {
   private closestPoints: [vec3, vec3] = [vec3.create(), vec3.create()];
 
+
   protected test() {
     this.simplex.clear();
 
@@ -16,6 +17,7 @@ export class ClosestsView extends TestViewportBase {
       this.axes1.targetTransform.position,
       this.axes2.targetTransform.position
     );
+
     const distance = closestPoints(
       this.simplex,
       this.closestPoints,
@@ -23,7 +25,8 @@ export class ClosestsView extends TestViewportBase {
       this.shape2,
       dir,
       this.gjkPanel.state.epsilon,
-      this.gjkPanel.state.maxIterations
+      this.gjkPanel.state.maxIterations,
+      this.debug
     );
 
     if (distance) {

@@ -1,5 +1,5 @@
 import { vec3, vec4 } from 'gl-matrix';
-import { debounceTime } from 'rxjs/operators';
+import { debounceTime, delay, mergeMap, takeUntil } from 'rxjs/operators';
 
 import { ViewportInterface } from './viewport.interface';
 import {
@@ -25,7 +25,8 @@ import { objects } from '../objects';
 import { createSegment, createTetra, createTriangle } from './tools';
 import { convexHull, getDifference } from './hull';
 import TestViewportBase from './test-viewport-base.class';
-import { Polytop } from '../src';
+import { Polytop, SupportPoint } from '../src';
+import { from, of, timer } from 'rxjs';
 
 export class SimplexView implements ViewportInterface {
   private renderer: Renderer;
@@ -146,13 +147,26 @@ export class SimplexView implements ViewportInterface {
   }
 
   private updateScene() {
-    this.drawables = this.drawables.slice(0, 4);
-    this.updateSimplex();
+    from(this.viewport.debug)
+      .pipe(
+        mergeMap((v, i) =>
+          of(v).pipe(
+            delay(i * 5000),
+            takeUntil(this.viewport.changed$)
+          )
+        )
+      )
+      .subscribe(e => {
+        this.drawables = this.drawables.slice(0, 4);
+        this.updateSimplex(e);
+      });
+
+    // this.updateSimplex(this.viewport.simplex);
     this.updateHull();
   }
 
-  private updateSimplex() {
-    if (!this.viewport.simplex) {
+  private updateSimplex(simplex: Set<SupportPoint>) {
+    if (!simplex) {
       return;
     }
 
@@ -167,7 +181,7 @@ export class SimplexView implements ViewportInterface {
       },
       state: { cullFace: false }
     };
-    for (let p of Array.from(this.viewport.simplex)) {
+    for (let p of Array.from(simplex)) {
       this.drawables.push({
         material,
         geometry: this.sphere,
@@ -176,20 +190,20 @@ export class SimplexView implements ViewportInterface {
     }
 
     this.drawables[1].geometry = null;
-    if (this.viewport.simplex.size === 2) {
-      const [w0, w1] = Array.from(this.viewport.simplex);
+    if (simplex.size === 2) {
+      const [w0, w1] = Array.from(simplex);
       this.drawables[1].geometry = this.renderer.createGeometry(
         createSegment(w0.diff, w1.diff),
         WebGL2RenderingContext.LINES
       );
-    } else if (this.viewport.simplex.size === 3) {
-      const [w0, w1, w2] = Array.from(this.viewport.simplex);
+    } else if (simplex.size === 3) {
+      const [w0, w1, w2] = Array.from(simplex);
       this.drawables[1].geometry = this.renderer.createGeometry(
         createTriangle(w0.diff, w1.diff, w2.diff),
         WebGL2RenderingContext.LINES
       );
-    } else if (this.viewport.simplex.size === 4) {
-      const [w0, w1, w2, w3] = Array.from(this.viewport.simplex);
+    } else if (simplex.size === 4) {
+      const [w0, w1, w2, w3] = Array.from(simplex);
       this.drawables[1].geometry = this.renderer.createGeometry(
         createTetra(w0.diff, w1.diff, w2.diff, w3.diff),
         WebGL2RenderingContext.LINES

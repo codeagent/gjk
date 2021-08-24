@@ -18,8 +18,10 @@ export const closestPoints = (
   shape1: ShapeInterface,
   dir: vec3,
   epsilon = 1.0e-2,
-  maxIterations = 25
+  maxIterations = 25,
+  debug: Simplex<SupportPoint>[] = []
 ): number => {
+  debug.length = 0;
   epsilon = epsilon * epsilon;
 
   const d = vec3.clone(dir);
@@ -35,6 +37,8 @@ export const closestPoints = (
       d
     )
   );
+
+  debug.push(new Set(outSimplex.values()));
 
   while (--maxIterations >= 0) {
     if (outSimplex.size === 1) {
@@ -54,6 +58,7 @@ export const closestPoints = (
       const p = Array.from(outSimplex.values());
       const b = vec3.create();
       closestPointToTriangle(b, p[0].diff, p[1].diff, p[2].diff, origin);
+
       fromBarycentric(d, b, p[0].diff, p[1].diff, p[2].diff);
       for (let i = 0; i < 3; i++) {
         if (b[i] === 0) {
@@ -114,6 +119,7 @@ export const closestPoints = (
         const p = Array.from(outSimplex.values());
         const b = vec3.create();
         closestPointToTriangle(b, p[0].diff, p[1].diff, p[2].diff, origin);
+        
         fromBarycentric(
           outClosests[0],
           b,
@@ -134,6 +140,7 @@ export const closestPoints = (
       return vec3.length(d);
     }
     outSimplex.add(s);
+    debug.push(new Set(outSimplex.values()));
   }
   return vec3.length(d);
 };
